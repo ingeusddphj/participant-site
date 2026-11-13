@@ -4,14 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>취업 준비 함께해요</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
   <main>
-    <h1>반가워요 👋</h1>
-    <p class="lead">필요한 메뉴를 눌러 주세요.</p>
+    <h1 data-setting="greeting">반가워요 👋</h1>
+    <p class="lead" data-setting="lead">필요한 메뉴를 눌러 주세요.</p>
     <ul class="menu-grid" data-menu-grid></ul>
   </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/defaults.js"></script>
   <script src="assets/site.js"></script>
 </body>
 </html>

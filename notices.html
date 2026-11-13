@@ -3,16 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>공지 · 취업 준비 함께해요</title>
+  <title>공지</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <link rel="stylesheet" href="assets/style.css">
 </head>
-<body>
+<body data-page="notices">
   <main>
     <a class="back-link" href="index.html">← 처음으로</a>
-    <h1>공지</h1>
-    <p class="lead">일정, 프로그램 안내, 제도 변경 사항을 알려드려요.</p>
-    <div class="placeholder">준비 중이에요.</div>
+    <h1 data-page-title>공지</h1>
+    <p class="lead" data-page-lead>일정과 프로그램 안내</p>
+    <div data-list><div class="placeholder">불러오는 중…</div></div>
   </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/defaults.js"></script>
   <script src="assets/site.js"></script>
+  <script src="assets/pages.js"></script>
 </body>
 </html>

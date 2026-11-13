@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ko" data-theme="c">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>관리자</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="assets/style.css">
+  <style>
+    body { padding-bottom: 40px; }
+    .admin-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 20px; }
+    .admin-bar h1 { margin: 0; }
+    .tabs { display: flex; gap: 6px; overflow-x: auto; margin: 0 -16px 20px; padding: 0 16px 4px; }
+    .tabs button { flex: none; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font: inherit; font-weight: 700; color: var(--text); }
+    .tabs button[aria-selected="true"] { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+    .item { display: flex; align-items: center; gap: 10px; }
+    .item .grow { flex: 1; min-width: 0; }
+    .item .grow strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .item .meta { color: var(--text-muted); font-size: 14px; }
+    .mini { min-height: 40px; padding: 0 12px; font-size: 15px; }
+    .danger { background: #fff; color: #b42318; border: 2px solid #f1c0bb; }
+    .form-card { border: 2px solid var(--primary); margin-bottom: 20px; }
+    .form-card h2 { margin: 0 0 16px; font-size: 20px; }
+    .themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .themes label { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px; border: 2px solid var(--border); border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; }
+    .themes input { position: absolute; opacity: 0; }
+    .themes label:has(input:checked) { border-color: var(--primary); background: var(--primary-soft); }
+    .dots { display: flex; gap: 4px; }
+    .dots i { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(0,0,0,.1); }
+    .color-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .color-row input[type="color"] { width: 52px; height: 44px; border: 1px solid var(--border); border-radius: 8px; background: none; }
+    .menu-row { display: grid; grid-template-columns: 56px 1fr; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .menu-row input[type="text"] { min-height: 44px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font: inherit; width: 100%; }
+    .menu-row .opts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 15px; }
+    .menu-row .opts label { display: flex; align-items: center; gap: 6px; }
+    .menu-row .opts input { width: 20px; height: 20px; }
+    .menu-row .opts .move { margin-left: auto; display: flex; gap: 6px; }
+    .logo-preview { height: 40px; max-width: 160px; object-fit: contain; border: 1px solid var(--border); border-radius: 8px; padding: 4px; background: #fff; }
+    .toast { position: fixed; left: 16px; right: 16px; bottom: 20px; max-width: 480px; margin: 0 auto; padding: 14px 16px; border-radius: 12px; background: #111827; color: #fff; font-weight: 600; text-align: center; opacity: 0; transform: translateY(10px); transition: .2s; pointer-events: none; z-index: 50; }
+    .toast.show { opacity: 1; transform: none; }
+    .toast.bad { background: #b42318; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <!-- 설정 전 안내 -->
+    <section id="view-setup" hidden>
+      <h1>관리자</h1>
+      <div class="card">
+        <p><strong>아직 Supabase가 연결되지 않았어요.</strong></p>
+        <p class="meta">assets/config.js 에 Supabase 주소와 공개 키를 넣으면 이 페이지에서 로그인할 수 있어요.</p>
+      </div>
+    </section>
+
+    <!-- 로그인 -->
+    <section id="view-login" hidden>
+      <h1>관리자 로그인</h1>
+      <p class="lead">사이트 주인만 로그인할 수 있어요.</p>
+      <form id="login-form" class="card">
+        <label class="field"><span>이메일</span><input type="email" name="email" autocomplete="username" required></label>
+        <label class="field"><span>비밀번호</span><input type="password" name="password" autocomplete="current-password" required></label>
+        <button class="btn" type="submit" style="width:100%">로그인</button>
+      </form>
+      <p style="margin-top:16px"><a href="index.html">← 사이트로 돌아가기</a></p>
+    </section>
+
+    <!-- 권한 없음 -->
+    <section id="view-denied" hidden>
+      <h1>권한이 없어요</h1>
+      <div class="card">
+        <p>이 계정은 관리자로 등록되어 있지 않아요.</p>
+        <button class="btn btn-outline" data-logout>로그아웃</button>
+      </div>
+    </section>
+
+    <!-- 관리 화면 -->
+    <section id="view-admin" hidden>
+      <div class="admin-bar">
+        <h1>관리자</h1>
+        <div class="row">
+          <a class="btn btn-outline mini" href="index.html" target="_blank" rel="noopener">사이트 보기</a>
+          <button class="btn btn-outline mini" data-logout>로그아웃</button>
+        </div>
+      </div>
+      <div class="tabs" role="tablist">
+        <button role="tab" data-tab="settings" aria-selected="true">사이트 설정</button>
+        <button role="tab" data-tab="notices">공지</button>
+        <button role="tab" data-tab="faqs">자주 묻는 질문</button>
+        <button role="tab" data-tab="resources">자료실</button>
+      </div>
+
+      <div data-panel="settings">
+        <form id="settings-form">
+          <div class="card">
+            <h2 style="margin-top:0;font-size:20px">이름과 인사말</h2>
+            <label class="field"><span>사이트 이름</span><input type="text" name="site_name" required></label>
+            <label class="field"><span>메인 화면 인사말</span><input type="text" name="greeting"></label>
+            <label class="field"><span>인사말 아래 안내 문구</span><input type="text" name="lead"></label>
+          </div>
+
+          <div class="card">
+            <h2 style="margin-top:0;font-size:20px">색상</h2>
+            <div class="themes" id="theme-options"></div>
+            <div class="color-row">
+              <label class="check" style="margin:0"><input type="checkbox" id="custom-primary-on"> 주색 직접 고르기</label>
+              <input type="color" id="custom-primary" value="#fbba00">
+            </div>
+            <div class="color-row">
+              <label class="check" style="margin:0"><input type="checkbox" id="custom-accent-on"> 포인트색 직접 고르기</label>
+              <input type="color" id="custom-accent" value="#1888be">
+            </div>
+            <p class="meta">바꾸는 대로 이 화면에 바로 미리 보여요. 저장해야 사이트에 반영돼요.</p>
+          </div>
+
+          <div class="card">
+            <h2 style="margin-top:0;font-size:20px">로고</h2>
+            <div class="row" style="align-items:center;margin-bottom:12px">
+              <img id="logo-preview" class="logo-preview" alt="" hidden>
+              <span id="logo-none" class="meta">로고 없음</span>
+            </div>
+            <label class="field"><span>로고 파일 올리기 <span class="hint">(PNG·JPG·SVG, 기관 허락 후 사용)</span></span>
+              <input type="file" id="logo-file" accept="image/*"></label>
+            <button type="button" class="btn danger mini" id="logo-remove" hidden>로고 빼기</button>
+          </div>
+
+          <div class="card">
+            <h2 style="margin-top:0;font-size:20px">메뉴</h2>
+            <p class="meta">이름·아이콘·설명을 고치고, 보이기·하단 메뉴(최대 5개)·순서를 정하세요.</p>
+            <div id="menu-editor"></div>
+          </div>
+
+          <button class="btn" type="submit" style="width:100%;margin-top:16px">설정 저장</button>
+        </form>
+      </div>
+
+      <div data-panel="notices" hidden></div>
+      <div data-panel="faqs" hidden></div>
+      <div data-panel="resources" hidden></div>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/defaults.js"></script>
+  <script src="assets/admin.js"></script>
+</body>
+</html>
