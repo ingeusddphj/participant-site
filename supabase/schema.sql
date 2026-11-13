@@ -38,8 +38,10 @@ create table if not exists public.site_settings (
   logo_url text,
   logo_path text,
   menus jsonb,          -- 메뉴 이름·아이콘·설명·표시 여부·순서
+  extra jsonb not null default '{}'::jsonb, -- 배경 이미지, 하단 문구 등 추가 설정
   updated_at timestamptz default now()
 );
+alter table public.site_settings add column if not exists extra jsonb not null default '{}'::jsonb;
 insert into public.site_settings (id) values (1) on conflict do nothing;
 alter table public.site_settings enable row level security;
 

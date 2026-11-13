@@ -241,4 +241,13 @@ survey_responses (
 | `assets/site.js` | 공개 페이지 공통: 머리글·하단 메뉴·메인 타일 |
 | `assets/pages.js` | 공지·FAQ·자료실 목록 표시 |
 | `assets/admin.js` | 관리자 페이지 |
-| `supabase/schema.sql` | 테이블·RLS·Storage 설정 |
+| `supabase/schema.sql` | 테이블·RLS·Storage 설정 (전체, 처음 설치용) |
+| `supabase/migrations/` | 이미 설치된 DB에 추가로 실행할 변경분 (번호 순) |
+| `assets/icons/` | 선 아이콘 SVG (Lucide, ISC 라이선스). `ico("이름")` 또는 `<span data-ico="이름">` 로 사용 |
+
+### 디자인 원칙 (2026-11-13 개편)
+- 이모지 금지. 아이콘은 `assets/icons/` 선 아이콘 또는 관리자가 올린 그림
+- 중립 회색 바탕 + 주색은 포인트로만. 카드·목록은 `.list`, `.quick-card`, `.panel` 부품 재사용
+- 메인: 남색 히어로(대표 이미지 가능) + 바로가기 카드 + 최근 공지 + 바닥글. PC는 머리글 가로 메뉴, 휴대폰은 하단 탭
+- 추가 설정값은 `site_settings.extra`(jsonb)에 넣어 DB 구조 변경 없이 늘림
+- 화면 확인: 실제 휴대폰 폭(390px)과 PC(1366px) 모두에서 스크린샷으로 점검

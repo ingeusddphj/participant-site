@@ -2,20 +2,31 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
   <title>취업 준비 함께해요</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
   <link rel="stylesheet" href="assets/style.css">
 </head>
-<body>
+<body data-page="home">
+  <section class="hero" id="hero"></section>
   <main>
-    <h1 data-setting="greeting">반가워요 👋</h1>
-    <p class="lead" data-setting="lead">필요한 메뉴를 눌러 주세요.</p>
-    <ul class="menu-grid" data-menu-grid></ul>
+    <section class="quick container" aria-label="바로가기">
+      <ul class="quick-grid" data-menu-grid></ul>
+    </section>
+    <section class="section container" aria-labelledby="recent-title">
+      <div class="section-head">
+        <h2 id="recent-title">최근 공지</h2>
+        <a href="notices.html">전체 보기<span data-ico="chevron-right"></span></a>
+      </div>
+      <div data-list></div>
+    </section>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script src="assets/config.js"></script>
   <script src="assets/defaults.js"></script>
   <script src="assets/site.js"></script>
+  <script src="assets/pages.js"></script>
 </body>
 </html>
