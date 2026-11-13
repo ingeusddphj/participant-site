@@ -8,7 +8,7 @@ const MENUS = [
   { href: "resources.html", icon: "📂", name: "자료실",          desc: "이력서·자소서·면접 자료",    bottom: true },
   { href: "board.html",     icon: "💬", name: "익명 게시판",     desc: "고민과 후기 나누기",         bottom: true },
   { href: "contact.html",   icon: "✉️", name: "상담사에게 보내기", desc: "건의·질문·상담요청",       bottom: true },
-  { href: "survey.html",    icon: "📊", name: "만족도·통계",     desc: "설문 참여와 결과 보기",      bottom: false },
+  { href: "faq.html",       icon: "❓", name: "자주 묻는 질문",  desc: "수당·출석·구직활동 인정",    bottom: false },
 ];
 
 function currentPage() {
