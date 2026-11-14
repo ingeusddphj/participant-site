@@ -7,10 +7,22 @@
   const MAX = 60;
   const COLORS = [["yellow", "#fff1a8"], ["pink", "#ffd8df"], ["mint", "#cff1df"], ["sky", "#d3e6ff"], ["lilac", "#e5dcff"]];
   const PINS = ["#d9483b", "#2d3a4b", "#e0a100", "#2f7d5b", "#3a6fd8"];
-  const ADJ = ["성실한", "용감한", "다정한", "씩씩한", "든든한", "반짝이는", "꾸준한", "따뜻한", "유쾌한", "차분한", "부지런한", "명랑한"];
-  const ANI = ["고양이", "펭귄", "여우", "다람쥐", "곰", "토끼", "수달", "고래", "부엉이", "강아지", "판다", "거북이"];
+  // 별명 = 재밌는 꾸밈말 + 꽃·식물 이름 (숫자 없음)
+  const ADJ = [
+    "꽃길만 걷는", "물 잘 마시는", "햇살 샤워 중인", "뿌리 깊은", "새싹 돋는", "콧노래 부르는",
+    "기지개 켜는", "용기 백배", "멋 부린", "꿋꿋한", "반짝반짝", "느긋한", "부지런한", "낭만적인",
+    "꽃망울 터진", "흥 많은", "쑥쑥 크는", "바람 타는", "웃음 많은", "튼튼한", "야무진", "근성 있는",
+    "합격 예감", "자신감 충전한", "칭찬받은", "씩씩한", "포기를 모르는", "산책 나온", "비 맞고 큰",
+    "아침형", "든든한", "눈치 빠른", "열정 가득", "단단해진", "오늘도 버틴", "행운 가득",
+  ];
+  const PLANT = [
+    "해바라기", "민들레", "튤립", "수국", "라벤더", "코스모스", "개나리", "진달래", "벚꽃", "매화",
+    "동백꽃", "무궁화", "데이지", "장미", "프리지아", "안개꽃", "선인장", "몬스테라", "고사리",
+    "네잎클로버", "대나무", "소나무", "은행나무", "단풍나무", "올리브", "바질", "로즈마리", "다육이",
+    "연꽃", "백합", "채송화", "봉선화", "금잔화", "카네이션", "강아지풀", "허브", "새싹", "도토리",
+  ];
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
-  const makeNick = () => `${pick(ADJ)} ${pick(ANI)} ${1 + Math.floor(Math.random() * 99)}`;
+  const makeNick = () => `${pick(ADJ)} ${pick(PLANT)}`;
 
   // 메모마다 고정된 기울기·핀 색 (새로고침해도 같은 모양)
   const hash = (s) => { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) | 0; return Math.abs(h); };
@@ -43,14 +55,14 @@
   // ── 가짜 메모 (시안 전용) ──
   const minsAgo = (m) => new Date(Date.now() - m * 60000).toISOString();
   const FAKE = [
-    ["면접 보러 가시는 분들\n다 잘 되실 거예요! 긴장 풀고 화이팅", "성실한 고양이 12", "yellow", 12],
-    ["3개월 만에 서류 합격했어요.\n포기하지 마세요 진짜로", "용감한 펭귄 7", "pink", 55],
-    ["오늘도 이력서 한 줄 고친 나, 칭찬해", "다정한 여우 31", "mint", 140],
-    ["불합격 문자 받아도 그게 끝이 아니더라고요. 다음이 있어요", "꾸준한 수달 48", "sky", 300],
-    ["자소서 첨삭 받고 훨씬 나아졌어요. 상담 꼭 받아보세요", "든든한 곰 3", "lilac", 1500],
-    ["같이 준비하는 사람들이 있다는 게 힘이 돼요", "차분한 부엉이 66", "yellow", 2900],
-    ["첫 출근 했습니다!\n여러분도 곧이에요", "반짝이는 토끼 20", "mint", 4400],
-    ["오늘 하루도 버틴 우리 모두 수고했어요", "따뜻한 고래 9", "pink", 8000],
+    ["면접 보러 가시는 분들\n다 잘 되실 거예요! 긴장 풀고 화이팅", "꽃길만 걷는 해바라기", "yellow", 12],
+    ["3개월 만에 서류 합격했어요.\n포기하지 마세요 진짜로", "포기를 모르는 민들레", "pink", 55],
+    ["오늘도 이력서 한 줄 고친 나, 칭찬해", "쑥쑥 크는 몬스테라", "mint", 140],
+    ["불합격 문자 받아도 그게 끝이 아니더라고요. 다음이 있어요", "비 맞고 큰 수국", "sky", 300],
+    ["자소서 첨삭 받고 훨씬 나아졌어요. 상담 꼭 받아보세요", "칭찬받은 라벤더", "lilac", 1500],
+    ["같이 준비하는 사람들이 있다는 게 힘이 돼요", "콧노래 부르는 튤립", "yellow", 2900],
+    ["첫 출근 했습니다!\n여러분도 곧이에요", "합격 예감 네잎클로버", "mint", 4400],
+    ["오늘 하루도 버틴 우리 모두 수고했어요", "오늘도 버틴 선인장", "pink", 8000],
   ].map(([body, nickname, color, m], i) => ({ id: "f" + i, body, nickname, color, created_at: minsAgo(m) }));
 
   async function load() {
@@ -88,7 +100,7 @@
   const ta = $("textarea"), err = $(".cheer-error");
   let nick = "", color = "yellow";
   const setNick = (n) => { nick = n; $("[data-nick]").textContent = n; };
-  try { setNick(localStorage.getItem("cheer-nick") || makeNick()); } catch (e) { setNick(makeNick()); }
+  try { const k = localStorage.getItem("cheer-nick"); setNick(k && !/\d/.test(k) ? k : makeNick()); } catch (e) { setNick(makeNick()); }
 
   $("[data-reroll]").onclick = () => setNick(makeNick());
   dlg.querySelectorAll("[data-color]").forEach((b) => b.onclick = () => {
