@@ -204,9 +204,9 @@ button { font: inherit; }
 @media (min-width: 900px) { .quick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 40px; } }
 .quick-item {
   position: relative;
-  display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px; grid-template-areas: "num main arrow";
-  align-items: center; gap: 14px;
-  padding: 20px 0;
+  display: grid; grid-template-columns: 46px minmax(0, 1fr) 40px; grid-template-areas: "icon main arrow";
+  align-items: center; gap: 16px;
+  padding: 18px 0;
   color: var(--text); text-decoration: none;
   box-shadow: inset 0 1px 0 var(--line);
 }
@@ -216,9 +216,21 @@ button { font: inherit; }
   transition: transform .7s var(--ease);
 }
 .quick-item:hover::after, .quick-item:focus-visible::after { transform: scaleX(1); }
-.qi-num { grid-area: num; font-family: var(--font-serif-en); font-style: italic; font-size: 19px; line-height: 1; color: var(--muted); transition: color .4s var(--ease); }
-.qi-num img { width: 40px; height: 40px; border-radius: 12px; object-fit: cover; }
+/* 아이콘: 흰 동그라미에 가는 선 아이콘, 올리면 노랗게 */
+.qi-icon {
+  grid-area: icon;
+  display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%;
+  background: var(--surface); color: var(--text);
+  box-shadow: 0 0 0 1px rgba(28, 26, 23, .05), 0 1px 2px rgba(28, 26, 23, .05), 0 6px 14px -6px rgba(28, 26, 23, .12);
+  overflow: hidden;
+  transition: background-color .45s var(--ease), color .45s var(--ease), transform .45s var(--ease);
+}
+.qi-icon .ico { font-size: 20px; }
+.qi-icon img { width: 100%; height: 100%; object-fit: cover; }
+.quick-item:hover .qi-icon:not(.is-img) { background: var(--primary); color: var(--on-primary); }
+.quick-item:hover .qi-icon { transform: translateY(-2px); }
 .qi-main { grid-area: main; min-width: 0; }
+.qi-num { margin-right: 8px; font-family: var(--font-serif-en); font-style: italic; font-size: 16px; color: var(--muted); letter-spacing: 0; }
 .quick-item .name { display: block; font-family: var(--font-head); font-weight: var(--head-weight); font-size: 20px; line-height: 1.3; letter-spacing: var(--head-tracking); }
 .quick-item .desc { display: block; margin-top: 3px; font-size: 13.5px; line-height: 1.45; color: var(--muted); }
 .qi-arrow {
@@ -228,18 +240,20 @@ button { font: inherit; }
   transition: background-color .45s var(--ease), box-shadow .45s var(--ease), color .45s var(--ease);
 }
 .qi-arrow .ico { font-size: 17px; transition: transform .45s var(--ease); }
-.quick-item:hover .qi-arrow { background: var(--primary); color: var(--on-primary); box-shadow: inset 0 0 0 1px var(--primary); }
+.quick-item:hover .qi-arrow { background: var(--ink); color: #fff; box-shadow: inset 0 0 0 1px var(--ink); }
 .quick-item:hover .qi-arrow .ico { transform: rotate(45deg); }
-.quick-item:hover .qi-num { color: var(--text); }
 .quick-item:active { opacity: .7; }
 @media (min-width: 900px) {
   .quick-item {
-    grid-template-columns: minmax(0, 1fr) 44px; grid-template-areas: "num arrow" "main main";
-    align-items: start; row-gap: 40px; padding: 26px 0 34px;
+    grid-template-columns: minmax(0, 1fr) 42px; grid-template-areas: "icon arrow" "main main";
+    align-items: center; row-gap: 18px; padding: 24px 0 28px;
   }
-  .qi-arrow { width: 44px; height: 44px; }
-  .quick-item .name { font-size: 27px; }
-  .quick-item .desc { margin-top: 6px; font-size: 15px; }
+  .qi-icon { width: 52px; height: 52px; }
+  .qi-icon .ico { font-size: 23px; }
+  .qi-arrow { width: 42px; height: 42px; }
+  .qi-num { font-size: 18px; }
+  .quick-item .name { font-size: 26px; }
+  .quick-item .desc { margin-top: 4px; font-size: 15px; }
 }
 
 /* 아이콘 타일 (관리자 화면의 메뉴 편집에서 사용) */

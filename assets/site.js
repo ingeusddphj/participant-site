@@ -93,8 +93,8 @@
     const grid = document.querySelector("[data-menu-grid]");
     if (grid) {
       setHTML(grid, menus.map((m, i) => `<li><a class="quick-item" href="${esc(m.href)}">
-        <span class="qi-num">${m.icon_url ? `<img src="${esc(m.icon_url)}" alt="">` : String(i + 1).padStart(2, "0")}</span>
-        <span class="qi-main"><span class="name">${esc(m.name)}</span>${m.desc ? `<span class="desc">${esc(m.desc)}</span>` : ""}</span>
+        <span class="qi-icon${m.icon_url ? " is-img" : ""}">${m.icon_url ? `<img src="${esc(m.icon_url)}" alt="">` : ico(m.icon_key || "file-text")}</span>
+        <span class="qi-main"><span class="name"><span class="qi-num">${String(i + 1).padStart(2, "0")}</span>${esc(m.name)}</span>${m.desc ? `<span class="desc">${esc(m.desc)}</span>` : ""}</span>
         <span class="qi-arrow">${ico("arrow-up-right")}</span>
       </a></li>`).join(""));
     }
