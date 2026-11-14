@@ -16,9 +16,22 @@
     return `<span class="dday${n <= 3 ? " is-urgent" : ""}"><small>D-</small>${n}</span>`;
   }
 
-  // '인재추천 희망' 창 — 지금은 안내만. 나중에 이름·연락처·이력서 제출 여부를 받아 상담사 메일로 보냄
-  // (개인정보는 사이트 DB에 저장하지 않고 메일로만 보낼 것)
+  // '인재추천 희망' — 관리자 페이지에 등록한 구글폼(미리 채워진 링크)을 열고, 첫 번째 칸에 공고 이름을 넣음
+  // 개인정보(이름·연락처)는 구글폼(상담사 구글 계정)에만 쌓이고 이 사이트 DB에는 저장되지 않음
+  function recFormUrl(j) {
+    const raw = window.SITE && window.SITE.extra && window.SITE.extra.recommend_form;
+    if (!raw) return "";
+    try {
+      const u = new URL(raw);
+      const key = [...u.searchParams.keys()].find((k) => /^entry\.\d+$/.test(k));
+      if (key) u.searchParams.set(key, `${j.company} · ${j.role}`);
+      if (!u.searchParams.has("usp")) u.searchParams.set("usp", "pp_url");
+      return u.href;
+    } catch (_) { return raw; }
+  }
   function openRecAsk(j) {
+    const url = recFormUrl(j);
+    if (url) { window.open(url, "_blank", "noopener"); return; }
     let dlg = document.getElementById("rec-ask");
     if (!dlg) {
       dlg = document.createElement("dialog");

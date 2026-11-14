@@ -744,11 +744,40 @@
         </div>
       </div>
       <div data-drafts></div>
+      <details class="panel rec-form-panel">
+        <summary><span><b>인재추천 신청서 (구글폼)</b> <span class="hint" data-rf-state></span></span>${ico("chevron-down")}</summary>
+        <div class="panel-body">
+          <p class="admin-desc" style="margin:0 0 12px">참여자가 '인재추천 희망'을 누르면 이 구글폼이 새 창으로 열려요. 구글폼 편집 화면 ⋮ → <b>미리 채워진 링크 가져오기</b>에서 첫 질문(지원 공고)에 아무 글자나 넣고 <b>링크 복사</b>한 주소를 붙여넣으세요. 그 칸에 공고 이름이 자동으로 들어가요. 비워 두면 '상담사에게 직접 말씀해 주세요' 안내만 떠요.</p>
+          <label class="field"><span>구글폼 링크</span><input type="url" data-rf placeholder="https://docs.google.com/forms/d/e/.../viewform?usp=pp_url&entry.123456=..."></label>
+          <button class="btn btn-dark" type="button" data-rf-save>저장</button>
+        </div>
+      </details>
       <div class="seg-tabs" role="group" aria-label="보기" style="margin-top:12px">
         <button type="button" data-view="live" aria-pressed="true">진행 중 <b data-n-live></b></button>
         <button type="button" data-view="done" aria-pressed="false">마감·숨김 <b data-n-done></b></button>
       </div>
       <div data-items><div class="list"><div class="skeleton"></div><div class="skeleton"></div></div></div>`;
+
+    // 인재추천 신청서 링크 (site_settings.extra.recommend_form)
+    const rfInput = $("[data-rf]", panel), rfState = $("[data-rf-state]", panel);
+    const rfShow = () => { const v = (saved && saved.extra.recommend_form) || ""; rfInput.value = v; rfState.textContent = v ? "· 연결됨" : "· 아직 없음"; };
+    rfShow();
+    $("[data-rf-save]", panel).addEventListener("click", async (e) => {
+      const v = rfInput.value.trim();
+      if (v && !/^https:\/\/(docs\.google\.com\/forms|forms\.gle)\//.test(v)) return toast("구글폼 링크(docs.google.com/forms 또는 forms.gle)를 넣어 주세요.", true);
+      e.target.disabled = true;
+      try {
+        const { data, error: e1 } = await db.from("site_settings").select("extra").eq("id", 1).single();
+        if (e1) throw e1;
+        const extra = Object.assign({}, data.extra || {}, { recommend_form: v || null });
+        const { error } = await db.from("site_settings").update({ extra }).eq("id", 1);
+        if (error) throw error;
+        if (saved) saved.extra.recommend_form = v || null;
+        try { localStorage.removeItem("site-settings-v2"); } catch (_) {}
+        rfShow();
+        toast(v ? "인재추천 신청서를 연결했어요." : "연결을 해제했어요.");
+      } catch (err) { fail(err); } finally { e.target.disabled = false; }
+    });
 
     const drafts = $("[data-drafts]", panel);
     const list = $("[data-items]", panel);
