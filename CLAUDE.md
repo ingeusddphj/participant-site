@@ -256,5 +256,6 @@ survey_responses (
 - 섹션 제목 = 작은 영문 라벨(kicker) + 한글 제목. 버튼은 알약 모양
 - 머리글은 처음엔 투명, 내리면 반투명 유리. 휴대폰 하단 탭은 떠 있는 유리 막대
 - 움직임: 구역이 스크롤에 맞춰 살짝 떠오름(data-reveal), 동작 줄이기 설정 존중
+- **캐시 주의**: GitHub Pages는 CSS·JS를 10분간 브라우저에 저장함. assets/ 파일을 고치면 모든 HTML의 ?v= 버전 문자열을 새 값으로 바꿀 것 (scratchpad의 cachebust 방식: href/src="assets/...?v=날짜")
 - 추가 설정값은 `site_settings.extra`(jsonb)에 넣어 DB 구조 변경 없이 늘림
 - 화면 확인: 실제 휴대폰 폭(390px)과 PC(1366px) 모두에서 스크린샷으로 점검
