@@ -12,17 +12,18 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gamja+Flower&display=swap">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/cheer.css">
+  <script>document.documentElement.classList.add("js")</script>
 </head>
 <body data-page="home">
   <section class="hero" id="hero"></section>
   <main>
-    <section class="quick container" aria-label="바로가기">
+    <section class="quick container" aria-label="바로가기" data-reveal>
       <ul class="quick-grid" data-menu-grid></ul>
     </section>
-    <section class="section container" aria-labelledby="cheer-title">
+    <section class="section container" aria-labelledby="cheer-title" data-reveal>
       <div class="section-head">
-        <h2 id="cheer-title">응원 보드</h2>
-        <a href="board.html">전체 보기<span data-ico="chevron-right"></span></a>
+        <div><p class="kicker">Cheer board</p><h2 id="cheer-title">응원 보드</h2></div>
+        <a class="more-link" href="board.html">전체 보기<span data-ico="arrow-right"></span></a>
       </div>
       <div class="cheer-intro">
         <p>함께 준비하는 분들께 짧은 응원을 남겨 주세요.<br>이름 대신 별명으로 붙어요.</p>
@@ -32,10 +33,10 @@
         <ul class="cheer-grid" data-cheer data-limit="8"></ul>
       </div></div>
     </section>
-    <section class="section container" aria-labelledby="recent-title">
+    <section class="section container" aria-labelledby="recent-title" data-reveal>
       <div class="section-head">
-        <h2 id="recent-title">최근 공지</h2>
-        <a href="notices.html">전체 보기<span data-ico="chevron-right"></span></a>
+        <div><p class="kicker">Notice</p><h2 id="recent-title">최근 공지</h2></div>
+        <a class="more-link" href="notices.html">전체 보기<span data-ico="arrow-right"></span></a>
       </div>
       <div data-list></div>
     </section>
