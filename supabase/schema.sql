@@ -263,3 +263,4 @@ create policy "jobs_admin_delete" on public.jobs for delete using (public.is_adm
 
 
 alter table public.jobs add column if not exists note text;
+alter table public.jobs add column if not exists duty text; -- 직무 분류 (상담사 입력)

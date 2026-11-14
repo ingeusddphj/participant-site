@@ -70,7 +70,7 @@
       if (state.soon) { const n = dleft(j); if (n === null || n < 0 || n > 7) return false; }
       if (state.fresh && !isNew(j)) return false;
       if (state.q) {
-        const hay = [j.company, j.role, j.region, j.etc, j.education, j.career].join(" ").toLowerCase();
+        const hay = [j.company, j.role, j.duty, j.region, j.etc, j.education, j.career].join(" ").toLowerCase();
         if (!state.q.toLowerCase().split(/\s+/).every((w) => hay.includes(w))) return false;
       }
       return true;
@@ -97,6 +97,7 @@
       <div class="fold-body job-body">
         ${j.note ? `<div class="job-note-full"><span class="who">상담사 코멘트</span><p>${esc(j.note)}</p></div>` : ""}
         <dl class="job-dl">
+          ${j.duty ? `<div class="wide"><dt>직무</dt><dd>${esc(j.duty)}</dd></div>` : ""}
           <div><dt>고용형태</dt><dd>${esc(empText(j))}</dd></div>
           <div><dt>경력</dt><dd>${esc(j.career || "-")}</dd></div>
           <div><dt>학력</dt><dd>${esc(j.education || "-")}</dd></div>

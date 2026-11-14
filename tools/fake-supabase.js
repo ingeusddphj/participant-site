@@ -22,7 +22,7 @@
       { id:"r6", section:"운영 안내", category:"출석·일정", title:"12월 상담 일정표", description:null, files:[{url:"#",name:"12월_상담일정.xlsx",size:22000}], sort_order:0, created_at: "2026-11-12T02:00:00Z" },
     ],
     jobs: [
-      { id:"j1", link:"https://example.com", company:"삼성전자", category:"대기업", role:"인사노무", employment:"정규직", months:null, career:"신입", education:"대졸", region:"서울", area:"서울", etc:null, deadline:"2026-12-10", rolling:false, recommend:true, visible:true, note:"신입도 직무 교육이 탄탄한 곳이에요. 자소서 같이 준비해요!", created_at: now },
+      { id:"j1", link:"https://example.com", company:"삼성전자", category:"대기업", role:"인사노무", duty:"경영·사무·금융·보험직 > 인사·노무", employment:"정규직", months:null, career:"신입", education:"대졸", region:"서울", area:"서울", etc:null, deadline:"2026-12-10", rolling:false, recommend:true, visible:true, note:"신입도 직무 교육이 탄탄한 곳이에요. 자소서 같이 준비해요!", created_at: now },
       { id:"j2", link:"https://example.com", company:"한화에어로스페이스", category:"대기업", role:"R&D", employment:"정규직", months:null, career:"신입", education:"석사", region:"경기", area:"경기", etc:"오픽IM2", deadline:"2027-01-10", rolling:false, recommend:true, visible:true, created_at: now },
       { id:"j3", link:"https://example.com", company:"서울교통공사", category:"공공기관", role:"사무행정", employment:"인턴", months:6, career:"신입", education:"고졸", region:"서울 성동구", area:"서울", etc:null, deadline:"2026-11-16", rolling:false, recommend:false, visible:true, created_at: "2026-11-10T00:00:00Z" },
       { id:"j4", link:"https://example.com", company:"○○물류", category:null, role:"물류 운영관리", employment:"계약직", months:12, career:"경력무관", education:"학력무관", region:"경기 평택", area:"경기", etc:"지게차 자격 우대", deadline:null, rolling:true, recommend:false, visible:true, created_at: "2026-11-01T00:00:00Z" },

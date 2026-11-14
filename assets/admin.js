@@ -795,6 +795,7 @@
             <label class="field"><span>기업명</span><input type="text" data-k="company" value="${esc(j.company || "")}" required></label>
             <label class="field"><span>기업 범주 <span class="hint">모르면 비워 두세요</span></span><select data-k="category">${opt(JOB_CATS, j.category || "", "선택 안 함")}</select></label>
             <label class="field span2"><span>직무</span><input type="text" data-k="role" value="${esc(j.role || "")}" required></label>
+            <label class="field span-all"><span>직무 분류 <span class="hint">고용노동부 직업분류로 직접 적어 주세요 · 참여자 화면 상세에 '직무'로 나와요 (비우면 안 보여요)</span></span><input type="text" data-k="duty" list="job-duty" value="${esc(j.duty || "")}" placeholder="예: 경영·사무·금융·보험직 > 인사·노무"></label>
             <label class="field"><span>고용형태</span><select data-k="employment">${opt(JOB_EMPS, j.employment || "정규직")}</select></label>
             <label class="field"><span>기간 <span class="hint">개월, 계약직·인턴만</span></span><input type="number" min="1" data-k="months" value="${j.months || ""}"></label>
             <label class="field"><span>경력</span><input type="text" data-k="career" list="job-career" value="${esc(j.career || "")}"></label>
@@ -826,7 +827,7 @@
       j.category = j.category || null;
       j.deadline = j.rolling ? null : j.deadline || null;
       j.area = regionArea(j.region || "");
-      ["link", "career", "education", "region", "etc", "salary", "note"].forEach((k) => (j[k] = j[k] || null));
+      ["link", "career", "education", "region", "etc", "salary", "note", "duty"].forEach((k) => (j[k] = j[k] || null));
       return j;
     }
     function showDrafts(jobs, editing) {
@@ -923,7 +924,8 @@
           $("[data-paste]", panel).value = "";
           load();
         } catch (err) {
-          if (/note/.test(String(err && err.message)) && /column|schema/i.test(String(err.message))) toast("DB 업데이트가 필요해요: supabase/migrations/006_jobs_note.sql 을 실행해 주세요.", true);
+          if (/duty/.test(String(err && err.message)) && /column|schema/i.test(String(err.message))) toast("DB 업데이트가 필요해요: supabase/migrations/007_jobs_duty.sql 을 실행해 주세요.", true);
+          else if (/note/.test(String(err && err.message)) && /column|schema/i.test(String(err.message))) toast("DB 업데이트가 필요해요: supabase/migrations/006_jobs_note.sql 을 실행해 주세요.", true);
           else if (/jobs/.test(String(err && err.message)) && /relation|schema|find|exist/i.test(String(err.message))) toast("DB 준비가 필요해요: supabase/migrations/005_jobs.sql 을 실행해 주세요.", true);
           else fail(err);
         } finally { sv.disabled = false; }
@@ -940,6 +942,7 @@
 
     const dl = document.createElement("div");
     dl.innerHTML = `<datalist id="job-career"><option value="신입"><option value="경력무관"><option value="신입·경력"><option value="경력 1년↑"><option value="경력 3년↑"><option value="경력 5년↑"></datalist>
+      <datalist id="job-duty">${["경영·사무·금융·보험직", "연구직 및 공학기술직", "교육·법률·사회복지·경찰·소방직 및 군인", "보건·의료직", "예술·디자인·방송·스포츠직", "미용·여행·숙박·음식·경비·청소직", "영업·판매·운전·운송직", "건설·채굴직", "설치·정비·생산직", "농림어업직"].map((x) => `<option value="${x}">`).join("")}</datalist>
       <datalist id="job-edu"><option value="학력무관"><option value="고졸"><option value="초대졸"><option value="대졸"><option value="석사"><option value="박사"></datalist>`;
     panel.append(dl);
 
