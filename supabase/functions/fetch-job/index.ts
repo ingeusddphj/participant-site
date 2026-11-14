@@ -1,7 +1,8 @@
 // 잡코리아 공고 링크를 받아 기업명·마감일·경력·학력 등을 읽어 주는 기능 (Supabase Edge Function)
 // 관리자 페이지 → 채용정보 → "링크로 채우기" 버튼이 이 기능을 부릅니다.
 // 설치: Supabase 대시보드 → Edge Functions → Deploy a new function → Via Editor
-//       함수 이름을 정확히 fetch-job 으로 하고 이 파일 내용을 그대로 붙여넣은 뒤 Deploy.
+//       이 파일 내용을 그대로 붙여넣은 뒤 Deploy. Supabase가 붙인 함수 이름을 assets/config.js 의 jobFetchFunction 에 적음
+//       (현재 설치된 이름: clever-processor)
 //       설치 후 함수 설정에서 "Enforce JWT Verification(JWT 확인)"은 꺼 주세요.
 //       (관리자인지는 아래 isAdmin 에서 직접 확인합니다)
 // 관리자로 로그인한 사람만 쓸 수 있고, 잡코리아 주소만 읽습니다.

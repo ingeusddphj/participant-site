@@ -4,4 +4,6 @@
 window.SITE_CONFIG = {
   supabaseUrl: "https://bljzmxjrudgejlvkrnbg.supabase.co",
   supabaseAnonKey: "sb_publishable_om_qle_ylr3laQFgYdLJVg_79o5nTYh", // 공개 키 (publishable)
+  // 잡코리아 링크 읽기 기능(Edge Function) 이름 — Supabase가 자동으로 붙인 이름을 그대로 씀
+  jobFetchFunction: "clever-processor",
 };

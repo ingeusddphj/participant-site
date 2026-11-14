@@ -821,15 +821,16 @@
       if (!/jobkorea\.co\.kr/.test(link)) { if (!quiet) toast("지금은 잡코리아 링크만 읽을 수 있어요.", true); return; }
       btn.disabled = true; btn.lastChild.textContent = "읽는 중…";
       try {
-        const { data, error } = await db.functions.invoke("fetch-job", { body: { url: link } });
+        const fn = (window.SITE_CONFIG && window.SITE_CONFIG.jobFetchFunction) || "fetch-job";
+        const { data, error } = await db.functions.invoke(fn, { body: { url: link } });
         if (error) {
           // 무엇이 문제인지 그대로 알려 줌
           let body = {}, status = error.context && error.context.status;
           try { body = await error.context.json(); } catch (_) {}
           let msg = body.error || "";
-          if (!msg && (status === 404 || body.code === "NOT_FOUND")) msg = "Supabase에서 'fetch-job' 이라는 이름의 기능을 찾지 못했어요. Edge Functions 목록에서 이름이 정확히 fetch-job 인지 확인해 주세요.";
-          else if (!msg && status === 401) msg = "Supabase가 로그인 확인에서 막았어요. fetch-job 설정에서 'Enforce JWT Verification(JWT 확인)'을 꺼 주세요.";
-          else if (!msg && error.name === "FunctionsFetchError") msg = "fetch-job 기능에 연결하지 못했어요. 이름이 fetch-job 인지, 설정에서 JWT 확인을 껐는지 확인해 주세요.";
+          if (!msg && (status === 404 || body.code === "NOT_FOUND")) msg = `Supabase에서 '${fn}' 이라는 이름의 기능을 찾지 못했어요. Edge Functions 목록의 이름과 assets/config.js 의 jobFetchFunction 이 같은지 확인해 주세요.`;
+          else if (!msg && status === 401) msg = `Supabase가 로그인 확인에서 막았어요. ${fn} 설정에서 'Enforce JWT Verification(JWT 확인)'을 꺼 주세요.`;
+          else if (!msg && error.name === "FunctionsFetchError") msg = `링크 읽기 기능(${fn})에 연결하지 못했어요. 설정에서 JWT 확인을 껐는지 확인해 주세요.`;
           throw new Error(msg || `${error.message}${status ? " (" + status + ")" : ""}`);
         }
         const j = fromJobkorea(data);

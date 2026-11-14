@@ -75,7 +75,7 @@
 - 고용형태를 안 적으면 정규직, 정규직이면 인재추천 가능이 기본. 기업 범주는 대기업 그룹명·공사/공단 등 확실할 때만 채우고 나머지는 비움(상담사가 고름)
 - 참여자 화면(assets/jobs.js): 요약 숫자(새 공고·이번 주 마감·인재추천 가능), 고용형태·경력·지역(서울/경기/그 외)·기업 거르기, 마감 임박순, 마감 지나면 자동 숨김, 펼치면 상세·원문 링크. 카톡용 문구 복사 버튼은 관리자 공고 목록(수정 앞)에만 있음
 - 급여는 대부분 협의라 목록에서 빼고 펼쳤을 때만
-- 잡코리아 링크 자동 채우기: Supabase Edge Function `supabase/functions/fetch-job` (대시보드 Edge Functions → Via Editor로 설치, JWT 확인 켜 둠 = 로그인한 관리자만, 잡코리아 주소만 허용)이 공고 페이지의 JobPosting 정보·meta description을 읽어 줌 → assets/jobparse.js `fromJobkorea()`가 칸으로 변환. 2026-11-14 실제 공고 9개로 시험해 기업명·고용형태·경력·학력·지역·마감 모두 정확. 직무는 공고 제목이 들어오니 상담사가 다듬음
+- 잡코리아 링크 자동 채우기: Supabase Edge Function `supabase/functions/fetch-job` (설치된 이름은 clever-processor, assets/config.js의 jobFetchFunction. 대시보드 Edge Functions → Via Editor로 설치, JWT 확인 켜 둠 = 로그인한 관리자만, 잡코리아 주소만 허용)이 공고 페이지의 JobPosting 정보·meta description을 읽어 줌 → assets/jobparse.js `fromJobkorea()`가 칸으로 변환. 2026-11-14 실제 공고 9개로 시험해 기업명·고용형태·경력·학력·지역·마감 모두 정확. 직무는 공고 제목이 들어오니 상담사가 다듬음
 - 링크만 여러 줄 붙여넣어도 공고 칸이 생기고 하나씩 자동으로 읽음
 
 ### 자료실 구조 (2026-11-14)
