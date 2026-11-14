@@ -115,7 +115,8 @@
 
   // 잡코리아 공고에서 읽어 온 정보(supabase/functions/fetch-job) → 공고 칸
   window.fromJobkorea = function (r) {
-    const company = String(r.company || "").replace(/㈜|\(주\)|주식회사|\(유\)|유한회사|\(재\)|재단법인|\(사\)|사단법인/g, "").replace(/\s+/g, " ").trim();
+    // (주)·㈜는 공고에 적힌 그대로 둠. '주식회사'·'유한회사' 같은 긴 표기만 뺌
+    const company = String(r.company || "").replace(/주식회사|유한회사|재단법인|사단법인/g, "").replace(/\s+/g, " ").trim();
     let title = String(r.title || "").replace(/^(\s*[\[【(][^\]】)]*[\]】)]\s*)+/, "").trim();
     title = title.replace(/^20\d\d년?\s*(상반기|하반기|상·하반기)?\s*/, "");
     if (company && title.startsWith(company)) title = title.slice(company.length).trim();
