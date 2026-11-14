@@ -601,7 +601,8 @@ a.list-row:hover .chev { color: var(--text); transform: translateX(3px); }
 .save-bar .status.dirty { color: #b45309; font-weight: 700; }
 
 .admin-list .list-row { padding: 14px 16px; }
-.admin-list .actions { display: flex; gap: 6px; flex: none; }
+.admin-list .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; flex: none; }
+.admin-list .actions .ico { font-size: 15px; }
 .res-files { display: grid; gap: 6px; margin-bottom: 8px; }
 .res-file { display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 14px; border-radius: 12px; background: var(--surface-2); }
 .res-file > .ico { font-size: 18px; color: var(--muted); }

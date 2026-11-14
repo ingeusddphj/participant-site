@@ -1,4 +1,4 @@
-// 채용정보 목록: 요약 숫자 · 거르기 · 한 줄 요약 · 눌러서 펼치기
+// 채용정보 목록: 요약 숫자 · 거르기 · 한 줄 요약 · 눌러서 펼치기 (카톡용 문구 복사는 관리자 페이지에 있음)
 // window.renderJobs(상자, 공고배열) 로 그립니다. 공고 칸 이름은 jobparse.js 와 같습니다.
 (function () {
   const DAY = 864e5;
@@ -69,7 +69,6 @@
         ${j.recommend ? `<p class="rec-note">${ico("heart-handshake")}<span><b>인재추천 가능 공고예요.</b> 지원하고 싶다면 상담사에게 말해 주세요. 추천서를 함께 준비해 드려요.</span></p>` : ""}
         <div class="job-actions">
           ${j.link ? `<a class="btn btn-dark" href="${esc(j.link)}" target="_blank" rel="noopener">원문 공고 보기${ico("arrow-up-right")}</a>` : ""}
-          <button class="btn btn-secondary" type="button" data-copy="${i}">${ico("clipboard-list")}카톡용 문구 복사</button>
         </div>
       </div>
     </details>`;
@@ -108,7 +107,7 @@
     }
 
     box.addEventListener("click", async (e) => {
-      const f = e.target.closest(".fchip"), t = e.target.closest("[data-t]"), c = e.target.closest("[data-copy]");
+      const f = e.target.closest(".fchip"), t = e.target.closest("[data-t]");
       if (f) {
         const { g, v } = f.dataset;
         if (g === "cat") state.cat = state.cat === v ? "" : v;
@@ -118,10 +117,6 @@
       else if (e.target.closest("[data-reset]")) {
         Object.assign(state, { emp: new Set(), career: new Set(), area: new Set(), cat: "", q: "", rec: false, soon: false, fresh: false });
         draw();
-      } else if (c) {
-        const text = jobToKakao(shown[+c.dataset.copy]);
-        try { await navigator.clipboard.writeText(text); (opts.toast || alert)("카톡용 문구를 복사했어요"); }
-        catch (_) { prompt("아래 문구를 복사해 주세요", text); }
       }
     });
     let timer;

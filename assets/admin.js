@@ -877,6 +877,7 @@
             <span class="body"><span class="title">${!j.visible ? '<span class="badge badge-neutral">숨김</span>' : ""}${esc(j.role)} · ${esc(j.company)}${j.category ? ` <span class="badge badge-neutral">${esc(j.category)}</span>` : ""}</span>
               <span class="sub">${esc([j.employment + (j.months ? ` ${j.months}개월` : ""), j.career, j.education, j.region].filter(Boolean).join(" · "))}${j.recommend ? " · 인재추천 가능" : ""}</span></span>
             <span class="actions">
+              <button class="btn btn-secondary btn-sm" data-copy="${esc(j.id)}" title="카톡으로 보내던 형식으로 복사">${ico("clipboard-list")}카톡 복사</button>
               <button class="btn btn-secondary btn-sm" data-edit="${esc(j.id)}">수정</button>
               <button class="btn btn-secondary btn-sm" data-hide="${esc(j.id)}">${j.visible ? "숨기기" : "보이기"}</button>
               <button class="btn btn-danger btn-sm" data-del="${esc(j.id)}">삭제</button>
@@ -899,10 +900,15 @@
       render();
     }));
     list.addEventListener("click", async (e) => {
-      const ed = e.target.closest("[data-edit]"), hd = e.target.closest("[data-hide]"), del = e.target.closest("[data-del]");
-      const id = (ed || hd || del || {}).dataset;
+      const cp = e.target.closest("[data-copy]"), ed = e.target.closest("[data-edit]"), hd = e.target.closest("[data-hide]"), del = e.target.closest("[data-del]");
+      const id = (cp || ed || hd || del || {}).dataset;
       if (!id) return;
-      const j = rows.find((x) => x.id === (id.edit || id.hide || id.del));
+      const j = rows.find((x) => x.id === (id.copy || id.edit || id.hide || id.del));
+      if (cp) {
+        const text = jobToKakao(j);
+        try { await navigator.clipboard.writeText(text); toast("카톡용 문구를 복사했어요. 단톡방에 붙여넣으세요."); }
+        catch (_) { prompt("아래 문구를 복사해 주세요", text); }
+      }
       if (ed) showDrafts([j], j.id);
       if (hd) {
         const { error } = await db.from("jobs").update({ visible: !j.visible }).eq("id", j.id);
