@@ -730,7 +730,7 @@
       <h1 class="admin-title">채용정보</h1>
       <p class="admin-desc">카톡으로 보내던 문구를 그대로 붙여넣으면 칸이 채워져요. 확인하고 고친 뒤 저장하세요. 마감일이 지난 공고는 사이트에서 저절로 내려가요.</p>
       <div class="panel">
-        <div class="panel-head"><h2>카톡 문구로 추가</h2><p>여러 공고를 한꺼번에 붙여도 돼요. 링크 줄 다음 줄에 '기업명/직무/경력/학력/지역/기타/마감' 순서로 적어 주세요 (순서가 조금 달라도 괜찮아요).</p></div>
+        <div class="panel-head"><h2>카톡 문구로 추가</h2><p>여러 공고를 한꺼번에 붙여도 돼요. 링크 줄 다음 줄에 '기업명/직무/경력/학력/지역/기타/마감' 순서로 적어 주세요 (순서가 조금 달라도 괜찮아요). <b>잡코리아 링크만 여러 줄 붙여넣어도</b> 기업명·마감일·학력 등을 자동으로 읽어 와요.</p></div>
         <div class="panel-body">
           <textarea class="job-paste" data-paste rows="5" placeholder="https://...&#10;삼성전자/인사노무/신입/서울/대졸/1210"></textarea>
           <div class="row" style="margin-top:12px">
@@ -754,10 +754,11 @@
     const opt = (list, v, blank) => (blank ? `<option value="">${blank}</option>` : "") + list.map((x) => `<option${x === v ? " selected" : ""}>${esc(x)}</option>`).join("");
 
     function card(j) {
-      return `<div class="job-edit panel">
+      return `<div class="job-edit panel"${j._linkOnly ? " data-autofill" : ""}>
         <div class="panel-body">
           <div class="job-grid">
-            <label class="field span2"><span>링크</span><input type="url" data-k="link" value="${esc(j.link || "")}" placeholder="https://"></label>
+            <div class="field span2"><span>링크 <span class="hint">잡코리아 링크면 '링크로 채우기'로 나머지 칸을 읽어 와요</span></span>
+              <div class="link-row"><input type="url" data-k="link" value="${esc(j.link || "")}" placeholder="https://"><button type="button" class="btn btn-secondary btn-sm" data-fill>${ico("download")}링크로 채우기</button></div></div>
             <label class="field"><span>기업명</span><input type="text" data-k="company" value="${esc(j.company || "")}" required></label>
             <label class="field"><span>기업 범주 <span class="hint">모르면 비워 두세요</span></span><select data-k="category">${opt(JOB_CATS, j.category || "", "선택 안 함")}</select></label>
             <label class="field span2"><span>직무</span><input type="text" data-k="role" value="${esc(j.role || "")}" required></label>
@@ -804,6 +805,46 @@
           <button class="btn btn-secondary" type="button" data-cancel-drafts>취소</button>
         </div>` : "";
       if (jobs.length) drafts.scrollIntoView({ behavior: "smooth", block: "start" });
+      // 링크만 붙여넣은 공고는 하나씩 자동으로 읽어 옴
+      (async () => { for (const c of drafts.querySelectorAll(".job-edit[data-autofill]")) await fillFromLink(c, true); })();
+    }
+
+    // 잡코리아 링크 → 칸 채우기 (Supabase Edge Function 'fetch-job' 이 대신 읽어 옴)
+    async function fillFromLink(c, quiet) {
+      const btn = c.querySelector("[data-fill]");
+      const link = c.querySelector('[data-k="link"]').value.trim();
+      if (!link) { if (!quiet) toast("링크를 먼저 넣어 주세요.", true); return; }
+      if (!/jobkorea\.co\.kr/.test(link)) { if (!quiet) toast("지금은 잡코리아 링크만 읽을 수 있어요.", true); return; }
+      btn.disabled = true; btn.lastChild.textContent = "읽는 중…";
+      try {
+        const { data, error } = await db.functions.invoke("fetch-job", { body: { url: link } });
+        if (error) {
+          let msg = "";
+          try { msg = (await error.context.json()).error; } catch (_) {}
+          if (!msg && /Failed to send|FunctionsFetchError|404|not found/i.test(String(error.name) + String(error.message))) msg = "링크 읽기 기능이 아직 설치되지 않았어요. 안내대로 Supabase에 fetch-job 을 설치해 주세요.";
+          throw new Error(msg || error.message);
+        }
+        const j = fromJobkorea(data);
+        const blank = !c.querySelector('[data-k="company"]').value.trim();
+        const set = (k, v) => {
+          const el = c.querySelector(`[data-k="${k}"]`);
+          if (!el || v === null || v === undefined || v === "") return;
+          if (el.type === "checkbox") { if (blank) el.checked = !!v; return; }
+          if (blank || !el.value.trim() || k === "deadline") el.value = v;
+        };
+        ["company", "role", "category", "employment", "months", "career", "education", "region", "etc", "deadline"].forEach((k) => set(k, j[k]));
+        if (blank) { set("rolling", j.rolling); set("recommend", j.recommend); }
+        if (j.rolling) { c.querySelector('[data-k="rolling"]').checked = true; c.querySelector('[data-k="deadline"]').disabled = true; }
+        c.removeAttribute("data-autofill");
+        c.querySelector("[data-src]").textContent = `잡코리아에서 읽음 · 직무는 공고 제목이라 짧게 다듬어 주세요`;
+        if (!quiet) toast("링크에서 읽어 왔어요. 확인하고 저장하세요.");
+      } catch (err) {
+        console.error(err);
+        c.querySelector("[data-src]").textContent = "링크를 읽지 못했어요: " + err.message;
+        if (!quiet) toast(err.message, true);
+      } finally {
+        btn.disabled = false; btn.lastChild.textContent = "링크로 채우기";
+      }
     }
 
     // 고용형태를 바꾸면 인재추천도 따라 바뀜 (정규직이면 가능). 직접 다시 바꿀 수 있음
@@ -817,6 +858,8 @@
       }
     });
     drafts.addEventListener("click", async (e) => {
+      const fb = e.target.closest("[data-fill]");
+      if (fb) return fillFromLink(fb.closest(".job-edit"));
       if (e.target.closest("[data-drop]")) {
         e.target.closest(".job-edit").remove();
         const left = drafts.querySelectorAll(".job-edit").length;
@@ -849,7 +892,7 @@
 
     $("[data-read]", panel).addEventListener("click", () => {
       const text = $("[data-paste]", panel).value;
-      const got = parseJobText(text).map((j) => Object.assign(j, { _src: `${j.company}/${j.role}…` }));
+      const got = parseJobText(text).map((j) => Object.assign(j, { _src: j._linkOnly ? "링크만 붙여넣음 · 잡코리아면 자동으로 읽어요" : `${j.company}/${j.role}…` }));
       if (!got.length) return toast("읽을 수 있는 공고가 없어요. '기업명/직무/...'처럼 / 로 나눠 주세요.", true);
       showDrafts(got);
     });

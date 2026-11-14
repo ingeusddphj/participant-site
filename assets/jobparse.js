@@ -79,6 +79,11 @@
     return job;
   }
 
+  const linkOnly = (link) => ({
+    link, company: "", role: "", category: "", employment: "정규직", months: null, career: "", education: "",
+    region: "", area: "", etc: "", deadline: null, rolling: false, salary: "", recommend: true, _linkOnly: true,
+  });
+
   window.parseJobText = function (text, today = new Date()) {
     const lines = String(text || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
     const out = [];
@@ -87,14 +92,15 @@
       const url = line.match(/https?:\/\/\S+/);
       const rest = url ? line.replace(url[0], "").trim() : line;
       if (url && !rest.includes("/")) {
-        // 링크만 있는 줄: 바로 다음 공고의 링크 (맨 끝에 남으면 마지막 공고에 붙임)
+        // 링크만 있는 줄: 바로 다음 공고의 링크. 링크가 연달아 오면 앞 링크는 '링크만 있는 공고'로
+        if (link) out.push(linkOnly(link));
         link = url[0];
         continue;
       }
       const job = parseLine(rest, url ? url[0] : link, today);
       if (job) { out.push(job); link = ""; }
     }
-    if (link && out.length && !out[out.length - 1].link) out[out.length - 1].link = link;
+    if (link) out.push(linkOnly(link));
     return out;
   };
 
@@ -106,4 +112,42 @@
     return (j.link ? j.link + "\n" : "") + parts.join("/");
   };
   window.regionArea = regionArea;
+
+  // 잡코리아 공고에서 읽어 온 정보(supabase/functions/fetch-job) → 공고 칸
+  window.fromJobkorea = function (r) {
+    const company = String(r.company || "").replace(/㈜|\(주\)|주식회사|\(유\)|유한회사|\(재\)|재단법인|\(사\)|사단법인/g, "").replace(/\s+/g, " ").trim();
+    let title = String(r.title || "").replace(/^(\s*[\[【(][^\]】)]*[\]】)]\s*)+/, "").trim();
+    title = title.replace(/^20\d\d년?\s*(상반기|하반기|상·하반기)?\s*/, "");
+    if (company && title.startsWith(company)) title = title.slice(company.length).trim();
+    title = title.replace(/\s+(신규\s*)?(채용|모집)(\s*공고)?\s*$/, "").trim() || String(r.title || "").trim();
+    const types = [].concat(r.employmentType || []).map(String);
+    let employment = "정규직";
+    if (/인턴/.test(title) || types.includes("INTERN")) employment = "인턴";
+    else if (types.includes("FULL_TIME")) employment = "정규직";
+    else if (types.some((t) => /CONTRACTOR|TEMPORARY/.test(t))) employment = "계약직";
+    else if (types.includes("PART_TIME")) employment = "아르바이트";
+    const mon = title.match(/(\d+)\s*개월/);
+    const edu = String(r.education || "").replace(/\s*이상/, "↑").replace(/^(대학교?\s*졸업|대학교\(4년\))/, "대졸").trim();
+    const addr = String(r.address || "").replace(/^\s*대한민국\s*/, "").trim().split(/\s+/);
+    const first = (addr[0] || "").replace(/(특별시|광역시|특별자치시|특별자치도)$/, "").replace(/^(경기|강원|충청북|충청남|전라북|전라남|경상북|경상남|제주)도$/, "$1")
+      .replace("충청북", "충북").replace("충청남", "충남").replace("전라북", "전북").replace("전라남", "전남").replace("경상북", "경북").replace("경상남", "경남");
+    const region = [first, addr[1] && /(구|시|군)$/.test(addr[1]) ? addr[1] : ""].filter(Boolean).join(" ");
+    const sum = String(r.summary || "");
+    const dl = sum.match(/마감일\s*:\s*([^,]+)/);
+    let deadline = null, rolling = false;
+    if (dl && /상시|채용\s*시/.test(dl[1])) rolling = true;
+    else if (dl && /(\d{4})\.(\d{1,2})\.(\d{1,2})/.test(dl[1])) {
+      const m = dl[1].match(/(\d{4})\.(\d{1,2})\.(\d{1,2})/);
+      deadline = `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+    } else if (r.validThrough) deadline = String(r.validThrough).slice(0, 10);
+    const careerM = sum.match(/경력\s*:\s*([^,]+)/);
+    // 요약 문구 쪽이 더 자세하면(예: 경력 3년이상) 그쪽을 씀
+    let career = String((careerM && /\d/.test(careerM[1]) ? careerM[1] : r.experience) || (careerM ? careerM[1] : "")).trim();
+    career = career.replace(/\s*이상/, "↑").replace(/\s+↑/, "↑");
+    const etc = /전환형/.test(title) && employment !== "정규직" ? "정규직 전환형" : "";
+    return {
+      company, role: title, category: guessCategory(company), employment, months: employment === "정규직" ? null : mon ? +mon[1] : null,
+      career, education: edu, region, area: regionArea(region), etc, deadline, rolling, recommend: employment === "정규직",
+    };
+  };
 })();

@@ -630,6 +630,9 @@ a.list-row:hover .chev { color: var(--text); transform: translateX(3px); }
 .job-grid .field { margin-bottom: 14px; }
 .job-grid .field input:not([type="checkbox"]), .job-grid .field select { min-height: 42px; padding: 8px 12px; font-size: 15px; }
 .job-switches { justify-content: flex-end; gap: 10px; }
+.link-row { display: flex; gap: 8px; align-items: center; }
+.link-row input { flex: 1; min-width: 0; }
+.link-row .btn { flex: none; min-height: 42px; }
 .job-edit-foot { justify-content: space-between; margin-top: 2px; }
 .drafts-foot { margin: 4px 0 28px; }
 .job-d { flex: none; width: 52px; font-family: var(--font-serif-en); font-style: italic; font-size: 18px; color: var(--text); }
