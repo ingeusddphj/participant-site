@@ -728,13 +728,17 @@
     const panel = $('[data-panel="jobs"]');
     panel.innerHTML = `
       <h1 class="admin-title">채용정보</h1>
-      <p class="admin-desc">카톡으로 보내던 문구를 그대로 붙여넣으면 칸이 채워져요. 확인하고 고친 뒤 저장하세요. 마감일이 지난 공고는 사이트에서 저절로 내려가요.</p>
+      <p class="admin-desc">잡코리아 링크나 카톡 문구를 붙여넣으면 칸이 채워져요. 마감일이 지난 공고는 사이트에서 저절로 내려가요.</p>
       <div class="panel">
-        <div class="panel-head"><h2>카톡 문구로 추가</h2><p>여러 공고를 한꺼번에 붙여도 돼요. 링크 줄 다음 줄에 '기업명/직무/경력/학력/지역/기타/마감' 순서로 적어 주세요 (순서가 조금 달라도 괜찮아요). <b>잡코리아 링크만 여러 줄 붙여넣어도</b> 기업명·마감일·학력 등을 자동으로 읽어 와요.</p></div>
+        <div class="panel-head"><h2>공고 추가</h2><p>아래 칸에 붙여넣고 <b>읽기</b>를 누르면 칸이 채워진 편집 상자가 나와요. 확인하고 저장하면 끝이에요.</p></div>
+        <div class="add-ways">
+          <div class="add-way"><span class="add-tag">방법 1</span><strong>잡코리아 링크만 붙여넣기</strong><span>기업명·고용형태·경력·학력·지역·마감일을 자동으로 읽어 와요. 여러 줄 가능.</span><code>https://www.jobkorea.co.kr/Recruit/GI_Read/…</code></div>
+          <div class="add-way"><span class="add-tag">방법 2</span><strong>카톡으로 보내던 문구 붙여넣기</strong><span>링크 줄 다음 줄에 / 로 나눠 적은 문구. 순서가 조금 달라도 돼요.</span><code>삼성전자/인사노무/신입/서울/대졸/1210</code></div>
+        </div>
         <div class="panel-body">
-          <textarea class="job-paste" data-paste rows="5" placeholder="https://...&#10;삼성전자/인사노무/신입/서울/대졸/1210"></textarea>
+          <textarea class="job-paste" data-paste rows="5" placeholder="잡코리아 링크 또는 카톡 문구를 붙여넣으세요&#10;https://www.jobkorea.co.kr/Recruit/GI_Read/…&#10;https://www.jobkorea.co.kr/Recruit/GI_Read/…"></textarea>
           <div class="row" style="margin-top:12px">
-            <button class="btn btn-dark" type="button" data-read>${ico("clipboard-list")}읽기</button>
+            <button class="btn btn-dark" type="button" data-read>${ico("download")}읽기</button>
             <button class="btn btn-secondary" type="button" data-blank>${ico("plus")}직접 입력</button>
           </div>
         </div>
