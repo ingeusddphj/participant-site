@@ -63,21 +63,58 @@
       const { data, error } = await db.from("resources").select("*")
         .order("sort_order", { ascending: true }).order("created_at", { ascending: false });
       if (error) throw error;
-      if (!data.length) { box.innerHTML = empty("folder-open", "아직 올라온 자료가 없어요"); return; }
+      if (!data.length) { box.innerHTML = empty("folder-open", "아직 올라온 자료가 없어요", "새 자료가 올라오면 여기에서 받을 수 있어요."); return; }
+
+      // 파일 유형: 확장자 → 이름·색
+      const TYPES = {
+        hwp: ["한글", "hwp"], hwpx: ["한글", "hwp"], doc: ["워드", "doc"], docx: ["워드", "doc"],
+        pdf: ["PDF", "pdf"], xls: ["엑셀", "xls"], xlsx: ["엑셀", "xls"], csv: ["엑셀", "xls"],
+        ppt: ["파워포인트", "ppt"], pptx: ["파워포인트", "ppt"], zip: ["압축 파일", "zip"],
+        jpg: ["이미지", "img"], jpeg: ["이미지", "img"], png: ["이미지", "img"], txt: ["텍스트", "etc"],
+      };
+      const extOf = (r) => ((r.file_name || r.file_url || "").split("?")[0].split(".").pop() || "").toLowerCase();
+      const typeOf = (r) => { const e = extOf(r); const t = TYPES[e] || ["파일", "etc"]; return { ext: (e || "file").toUpperCase().slice(0, 4), label: t[0], kind: t[1] }; };
+
       const order = ["이력서", "자소서", "면접", "기타"];
-      box.innerHTML = order.filter((c) => data.some((r) => r.category === c)).map((cat) => {
-        const items = data.filter((r) => r.category === cat);
-        return `<h2 class="group-title">${esc(cat)} <span class="count">${items.length}</span></h2>
-        <div class="list">${items.map((r) => {
-          const ext = ((r.file_name || r.file_url).split("?")[0].split(".").pop() || "").toUpperCase().slice(0, 4);
-          const href = r.file_name ? `${r.file_url}?download=${encodeURIComponent(r.file_name)}` : r.file_url;
-          return `<div class="list-row">
-            <span class="file-type">${esc(ext || "FILE")}</span>
-            <span class="body"><span class="title">${esc(r.title)}</span>${r.description ? `<span class="sub">${esc(r.description)}</span>` : ""}</span>
-            <a class="btn btn-secondary btn-sm" href="${esc(href)}" target="_blank" rel="noopener">${ico("download")}<span>받기</span></a>
-          </div>`;
-        }).join("")}</div>`;
-      }).join("");
+      const cats = order.filter((c) => data.some((r) => r.category === c));
+      let current = "전체";
+
+      const row = (r) => {
+        const t = typeOf(r);
+        const name = r.file_name || decodeURIComponent((r.file_url || "").split("?")[0].split("/").pop() || "파일");
+        const href = r.file_name ? `${r.file_url}?download=${encodeURIComponent(r.file_name)}` : r.file_url;
+        return `<details class="fold res" id="r-${esc(r.id)}">
+          <summary>
+            <span class="file-type" data-kind="${t.kind}">${esc(t.ext)}</span>
+            <span class="body">
+              <span class="title">${isNew(r.created_at) ? '<span class="badge badge-primary">NEW</span>' : ""}${esc(r.title)}</span>
+              <span class="sub">${esc(r.category)}<i class="dot"></i>${fmtDate(r.created_at)}</span>
+            </span>${ico("chevron-right", "toggle")}
+          </summary>
+          <div class="fold-body res-body">
+            ${r.description ? `<p class="res-desc">${esc(r.description)}</p>` : ""}
+            <div class="file-card">
+              <span class="file-type" data-kind="${t.kind}">${esc(t.ext)}</span>
+              <span class="file-meta"><strong>${esc(name)}</strong><span>${esc(t.label)} 파일 · ${fmtDate(r.created_at)} 올림</span></span>
+              <a class="btn btn-dark" href="${esc(href)}" target="_blank" rel="noopener">${ico("download")}<span>받기</span></a>
+            </div>
+          </div>
+        </details>`;
+      };
+
+      function draw() {
+        const list = current === "전체" ? data : data.filter((r) => r.category === current);
+        box.innerHTML = `
+          ${cats.length > 1 ? `<div class="chips" role="tablist" aria-label="자료 분류">${["전체", ...cats].map((c) => {
+            const n = c === "전체" ? data.length : data.filter((r) => r.category === c).length;
+            return `<button type="button" role="tab" data-cat="${esc(c)}" aria-selected="${c === current}">${esc(c)}<span>${n}</span></button>`;
+          }).join("")}</div>` : ""}
+          <div class="list">${list.map(row).join("")}</div>`;
+        box.querySelectorAll("[data-cat]").forEach((b) => b.addEventListener("click", () => { current = b.dataset.cat; draw(); }));
+      }
+      draw();
+      const target = location.hash && document.querySelector(location.hash);
+      if (target) { target.open = true; target.scrollIntoView({ block: "center" }); }
     }
   } catch (e) {
     console.error(e);
