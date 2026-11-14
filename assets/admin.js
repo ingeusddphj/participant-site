@@ -52,6 +52,7 @@
     show("admin");
     await loadSettings();
     Object.keys(COLLECTIONS).forEach((k) => initCollection(k));
+    initResources();
     initCheers();
   }
 
@@ -370,19 +371,6 @@
         { key: "sort_order", label: "순서", type: "number", default: 0 },
       ],
     },
-    resources: {
-      label: "자료", title: "자료실", desc: "한글·워드·PDF 파일을 올리면 참여자가 내려받을 수 있어요.", icon: "folder-open",
-      order: [["category", true], ["sort_order", true], ["created_at", false]],
-      rowTitle: (r) => `<span class="badge badge-neutral">${esc(r.category)}</span>${esc(r.title)}`,
-      rowSub: (r) => esc(r.file_name || "파일"),
-      fields: [
-        { key: "category", label: "분류", type: "select", options: ["이력서", "자소서", "면접", "기타"] },
-        { key: "title", label: "자료 이름", type: "text", required: true },
-        { key: "description", label: "설명", type: "textarea", hint: "선택" },
-        { key: "__file", label: "파일", type: "file", hint: "수정할 때 비워 두면 기존 파일 유지" },
-        { key: "sort_order", label: "순서", type: "number", default: 0 },
-      ],
-    },
   };
 
   function fieldHtml(f, id) {
@@ -520,6 +508,205 @@
         if (newFile && editing && editing.file_path) await removeFiles([editing.file_path]).catch(() => {});
         toast("저장했어요.");
         closeForm();
+        load();
+      } catch (err) {
+        fail(err);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    load();
+  }
+
+
+  // ───────── 자료실 (큰 분류 + 파일 여러 개) ─────────
+  const SUB_SUGGEST = ["이력서", "자소서", "면접", "제도", "수당", "출석·일정", "프로그램", "기타"];
+  const sizeText = (n) => (!n ? "" : n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))}KB` : `${(n / 1024 / 1024).toFixed(1)}MB`);
+  const filesOf = (r) => (Array.isArray(r.files) && r.files.length ? r.files : r.file_url ? [{ url: r.file_url, path: r.file_path, name: r.file_name }] : []);
+
+  function initResources() {
+    const panel = $('[data-panel="resources"]');
+    const sections = () => {
+      const list = (saved && saved.extra.resource_sections) || DEFAULT_SETTINGS.extra.resource_sections;
+      return list.length ? list : ["취업 준비"];
+    };
+    panel.innerHTML = `
+      <div class="row" style="justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+        <div><h1 class="admin-title">자료실</h1><p class="admin-desc" style="margin:0">자료 하나에 파일을 여러 개 붙일 수 있어요 (예: 한글·워드·PDF 버전).</p></div>
+        <button class="btn btn-dark" data-new>${ico("plus")}새 자료</button>
+      </div>
+      <form class="panel form-panel" data-res-form hidden>
+        <div class="panel-head"><h2 data-form-title>새 자료</h2></div>
+        <div class="panel-body">
+          <div class="row" style="align-items:flex-start;gap:12px">
+            <label class="field" style="flex:1;min-width:160px"><span>큰 분류</span><select name="section"></select></label>
+            <label class="field" style="flex:1;min-width:160px"><span>작은 분류 <span class="hint">자유롭게 (예: 이력서, 수당)</span></span>
+              <input type="text" name="category" list="res-sub-list" required><datalist id="res-sub-list"></datalist></label>
+          </div>
+          <label class="field"><span>자료 이름</span><input type="text" name="title" required></label>
+          <label class="field"><span>설명 <span class="hint">선택</span></span><textarea name="description" rows="3" style="min-height:96px"></textarea></label>
+          <div class="field"><span>파일 <span class="hint">여러 개를 한 번에 골라도 돼요</span></span>
+            <div class="res-files" data-files></div>
+            <label class="file-drop">${ico("upload")}<span>파일 추가하기</span><input type="file" name="files" multiple></label>
+          </div>
+          <label class="field" style="max-width:160px"><span>순서 <span class="hint">작을수록 위</span></span><input type="number" name="sort_order" value="0"></label>
+          <div class="row">
+            <button class="btn btn-dark" type="submit">저장</button>
+            <button class="btn btn-secondary" type="button" data-cancel>취소</button>
+          </div>
+        </div>
+      </form>
+      <div data-items><div class="list"><div class="skeleton"></div><div class="skeleton"></div></div></div>
+      <form class="panel" data-sections style="margin-top:28px">
+        <div class="panel-head"><h2>큰 분류</h2><p>한 줄에 하나씩, 보이는 순서대로 적어 주세요. 참여자 화면 맨 위 탭이 돼요. 이미 자료가 있는 분류 이름을 바꾸면, 그 자료는 수정에서 새 분류를 다시 골라 주세요.</p></div>
+        <div class="panel-body">
+          <label class="field"><span>큰 분류 목록</span><textarea name="list" rows="4" style="min-height:110px"></textarea></label>
+          <button class="btn btn-dark" type="submit">큰 분류 저장</button>
+        </div>
+      </form>`;
+
+    const fm = $("[data-res-form]", panel);
+    const fileBox = $("[data-files]", fm);
+    const input = fm.elements.files;
+    let rows = [], editing = null, items = [], removed = [];
+
+    function drawFiles() {
+      fileBox.innerHTML = items.length
+        ? items.map((it, i) => `<div class="res-file">
+            ${ico(it.file ? "upload" : "file-text")}
+            <span class="nm">${esc(it.name)}<small>${it.file ? "새로 올릴 파일" : "올라가 있는 파일"}${it.size ? " · " + sizeText(it.size) : ""}</small></span>
+            <button type="button" class="btn btn-ghost btn-sm" data-rm="${i}" aria-label="${esc(it.name)} 빼기">${ico("x")}</button>
+          </div>`).join("")
+        : `<p class="res-none">아직 파일이 없어요.</p>`;
+    }
+    fileBox.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-rm]"); if (!b) return;
+      const [it] = items.splice(+b.dataset.rm, 1);
+      if (!it.file && it.path) removed.push(it.path);
+      drawFiles();
+    });
+    input.addEventListener("change", () => {
+      [...input.files].forEach((f) => items.push({ file: f, name: f.name, size: f.size }));
+      input.value = "";
+      drawFiles();
+    });
+
+    function openForm(row) {
+      editing = row; removed = [];
+      items = row ? filesOf(row).map((x) => ({ ...x })) : [];
+      $("[data-form-title]", fm).textContent = row ? "자료 수정" : "새 자료";
+      const secs = sections().slice();
+      if (row && row.section && !secs.includes(row.section)) secs.push(row.section);
+      fm.elements.section.innerHTML = secs.map((s) => `<option>${esc(s)}</option>`).join("");
+      fm.elements.section.value = row ? row.section : secs[secs.length - 1];
+      const subs = [...new Set(SUB_SUGGEST.concat(rows.map((r) => r.category).filter(Boolean)))];
+      $("#res-sub-list").innerHTML = subs.map((s) => `<option value="${esc(s)}">`).join("");
+      fm.elements.category.value = row ? row.category || "" : "";
+      fm.elements.title.value = row ? row.title : "";
+      fm.elements.description.value = row ? row.description || "" : "";
+      fm.elements.sort_order.value = row ? row.sort_order || 0 : 0;
+      drawFiles();
+      fm.hidden = false;
+      $("[data-new]", panel).hidden = true;
+      fm.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    function closeForm() { editing = null; fm.hidden = true; $("[data-new]", panel).hidden = false; }
+
+    async function load() {
+      const { data, error } = await db.from("resources").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
+      if (error) return fail(error);
+      rows = data;
+      const secs = sections().slice();
+      rows.forEach((r) => { if (r.section && !secs.includes(r.section)) secs.push(r.section); });
+      const groups = secs.map((s) => [s, rows.filter((r) => (r.section || "취업 준비") === s)]).filter(([, l]) => l.length);
+      $("[data-items]", panel).innerHTML = rows.length
+        ? groups.map(([s, list]) => `<h2 class="group-title">${esc(s)} <span class="count">${list.length}</span></h2>
+            <div class="list admin-list">${list.map((r) => `<div class="list-row">
+              <span class="body"><span class="title"><span class="badge badge-neutral">${esc(r.category || "기타")}</span>${esc(r.title)}</span>
+              <span class="sub">파일 ${filesOf(r).length}개 · ${new Date(r.created_at).toLocaleDateString("ko-KR")}</span></span>
+              <span class="actions"><button class="btn btn-secondary btn-sm" data-edit="${esc(r.id)}">수정</button><button class="btn btn-danger btn-sm" data-del="${esc(r.id)}">삭제</button></span>
+            </div>`).join("")}</div>`).join("")
+        : `<div class="list"><div class="empty">${ico("folder-open")}<strong>아직 자료가 없어요</strong><p>오른쪽 위 버튼으로 추가하세요.</p></div></div>`;
+    }
+
+    $("[data-new]", panel).addEventListener("click", () => openForm(null));
+    $("[data-cancel]", panel).addEventListener("click", closeForm);
+    $("[data-items]", panel).addEventListener("click", async (e) => {
+      const ed = e.target.closest("[data-edit]"), del = e.target.closest("[data-del]");
+      if (ed) openForm(rows.find((r) => r.id === ed.dataset.edit));
+      if (del) {
+        const r = rows.find((x) => x.id === del.dataset.del);
+        if (!confirm(`'${r.title}'을(를) 삭제할까요? 붙은 파일도 함께 지워져요. 되돌릴 수 없어요.`)) return;
+        const { error } = await db.from("resources").delete().eq("id", r.id);
+        if (error) return fail(error);
+        await removeFiles(filesOf(r).map((x) => x.path)).catch(() => {});
+        toast("삭제했어요.");
+        if (editing && editing.id === r.id) closeForm();
+        load();
+      }
+    });
+
+    fm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!items.length) return toast("파일을 하나 이상 붙여 주세요.", true);
+      const btn = fm.querySelector('[type="submit"]');
+      btn.disabled = true;
+      const uploaded = [];
+      try {
+        const files = [];
+        for (const it of items) {
+          if (it.file) {
+            btn.textContent = `올리는 중… (${files.length + 1}/${items.length})`;
+            const up = await upload(it.file, "resources");
+            uploaded.push(up.path);
+            files.push({ url: up.url, path: up.path, name: it.name, size: it.size });
+          } else files.push({ url: it.url, path: it.path, name: it.name, size: it.size });
+        }
+        const rec = {
+          section: fm.elements.section.value,
+          category: fm.elements.category.value.trim() || "기타",
+          title: fm.elements.title.value.trim(),
+          description: fm.elements.description.value.trim() || null,
+          sort_order: parseInt(fm.elements.sort_order.value, 10) || 0,
+          files,
+          // 예전 방식 칸도 첫 파일로 채워 둠
+          file_url: files[0].url, file_path: files[0].path, file_name: files[0].name,
+        };
+        const res = editing ? await db.from("resources").update(rec).eq("id", editing.id) : await db.from("resources").insert(rec);
+        if (res.error) throw res.error;
+        await removeFiles(removed).catch(() => {});
+        toast("저장했어요.");
+        closeForm();
+        load();
+      } catch (err) {
+        await removeFiles(uploaded).catch(() => {});
+        if (/section|files/.test(String(err && err.message)) && /column/.test(String(err && err.message))) toast("DB 업데이트가 필요해요: supabase/migrations/004_resources_v2.sql 을 실행해 주세요.", true);
+        else fail(err);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "저장";
+      }
+    });
+
+    const sf = $("[data-sections]", panel);
+    sf.elements.list.value = sections().join("\n");
+    sf.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = sf.querySelector("button");
+      btn.disabled = true;
+      try {
+        const list = [...new Set(sf.elements.list.value.split("\n").map((w) => w.trim()).filter(Boolean))];
+        if (!list.length) throw new Error("큰 분류를 하나 이상 적어 주세요.");
+        const { data, error: e1 } = await db.from("site_settings").select("extra").eq("id", 1).single();
+        if (e1) throw e1;
+        const extra = Object.assign({}, data.extra || {}, { resource_sections: list });
+        const { error } = await db.from("site_settings").update({ extra }).eq("id", 1);
+        if (error) throw error;
+        if (saved) saved.extra.resource_sections = list;
+        try { localStorage.removeItem("site-settings-v2"); } catch (_) {}
+        sf.elements.list.value = list.join("\n");
+        toast("큰 분류를 저장했어요.");
         load();
       } catch (err) {
         fail(err);

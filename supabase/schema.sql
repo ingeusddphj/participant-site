@@ -93,15 +93,21 @@ create policy "faqs_admin_delete" on public.faqs for delete using (public.is_adm
 -- ── 자료실 ──
 create table if not exists public.resources (
   id uuid primary key default gen_random_uuid(),
-  category text not null default '기타' check (category in ('이력서', '자소서', '면접', '기타')),
+  section text not null default '취업 준비', -- 큰 분류 (관리자 페이지에서 목록 편집)
+  category text not null default '기타',     -- 작은 분류 (자유 입력)
   title text not null,
   description text,
-  file_url text not null,
+  files jsonb not null default '[]'::jsonb, -- 첨부 파일 [{url, path, name, size}]
+  file_url text,        -- (예전 방식) 첫 파일
   file_path text,       -- Storage에 올린 파일 경로 (삭제할 때 사용)
   file_name text,       -- 내려받을 때 보일 원래 파일 이름
   sort_order int default 0,
   created_at timestamptz default now()
 );
+alter table public.resources add column if not exists section text not null default '취업 준비';
+alter table public.resources add column if not exists files jsonb not null default '[]'::jsonb;
+alter table public.resources drop constraint if exists resources_category_check;
+alter table public.resources alter column file_url drop not null;
 alter table public.resources enable row level security;
 
 drop policy if exists "resources_read" on public.resources;

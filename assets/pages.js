@@ -69,48 +69,67 @@
       const TYPES = {
         hwp: ["한글", "hwp"], hwpx: ["한글", "hwp"], doc: ["워드", "doc"], docx: ["워드", "doc"],
         pdf: ["PDF", "pdf"], xls: ["엑셀", "xls"], xlsx: ["엑셀", "xls"], csv: ["엑셀", "xls"],
-        ppt: ["파워포인트", "ppt"], pptx: ["파워포인트", "ppt"], zip: ["압축 파일", "zip"],
+        ppt: ["파워포인트", "ppt"], pptx: ["파워포인트", "ppt"], zip: ["압축", "zip"],
         jpg: ["이미지", "img"], jpeg: ["이미지", "img"], png: ["이미지", "img"], txt: ["텍스트", "etc"],
       };
-      const extOf = (r) => ((r.file_name || r.file_url || "").split("?")[0].split(".").pop() || "").toLowerCase();
-      const typeOf = (r) => { const e = extOf(r); const t = TYPES[e] || ["파일", "etc"]; return { ext: (e || "file").toUpperCase().slice(0, 4), label: t[0], kind: t[1] }; };
+      const typeOf = (name) => {
+        const e = (String(name || "").split("?")[0].split(".").pop() || "").toLowerCase();
+        const t = TYPES[e] || ["파일", "etc"];
+        return { ext: (e || "file").toUpperCase().slice(0, 4), label: t[0], kind: t[1] };
+      };
+      const sizeText = (n) => (!n ? "" : n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))}KB` : `${(n / 1024 / 1024).toFixed(1)}MB`);
+      const filesOf = (r) => (Array.isArray(r.files) && r.files.length ? r.files : r.file_url ? [{ url: r.file_url, name: r.file_name || decodeURIComponent(r.file_url.split("?")[0].split("/").pop()) }] : []);
+      data.forEach((r) => { r.section = r.section || "취업 준비"; r.category = r.category || "기타"; r._files = filesOf(r); });
 
-      const order = ["이력서", "자소서", "면접", "기타"];
-      const cats = order.filter((c) => data.some((r) => r.category === c));
-      let current = "전체";
+      const want = (window.SITE && window.SITE.extra && window.SITE.extra.resource_sections) || DEFAULT_SETTINGS.extra.resource_sections;
+      const sections = want.concat(data.map((r) => r.section).filter((s) => !want.includes(s)))
+        .filter((s, i, arr) => arr.indexOf(s) === i && data.some((r) => r.section === s));
+      let sec = "전체", cat = "전체";
 
+      const fileCard = (f, r) => {
+        const t = typeOf(f.name || f.url);
+        const href = f.name ? `${f.url}?download=${encodeURIComponent(f.name)}` : f.url;
+        return `<div class="file-card">
+          <span class="file-type" data-kind="${t.kind}">${esc(t.ext)}</span>
+          <span class="file-meta"><strong>${esc(f.name || "파일")}</strong><span>${esc(t.label)} 파일${f.size ? " · " + sizeText(f.size) : ""} · ${fmtDate(r.created_at)} 올림</span></span>
+          <a class="btn btn-dark" href="${esc(href)}" target="_blank" rel="noopener">${ico("download")}<span>받기</span></a>
+        </div>`;
+      };
       const row = (r) => {
-        const t = typeOf(r);
-        const name = r.file_name || decodeURIComponent((r.file_url || "").split("?")[0].split("/").pop() || "파일");
-        const href = r.file_name ? `${r.file_url}?download=${encodeURIComponent(r.file_name)}` : r.file_url;
+        const kinds = [...new Set(r._files.map((f) => typeOf(f.name || f.url).ext))];
+        const t = typeOf((r._files[0] || {}).name || (r._files[0] || {}).url);
         return `<details class="fold res" id="r-${esc(r.id)}">
           <summary>
-            <span class="file-type" data-kind="${t.kind}">${esc(t.ext)}</span>
+            <span class="file-type" data-kind="${r._files.length > 1 ? "multi" : t.kind}">${r._files.length > 1 ? `${r._files.length}<small>개</small>` : esc(t.ext)}</span>
             <span class="body">
               <span class="title">${isNew(r.created_at) ? '<span class="badge badge-primary">NEW</span>' : ""}${esc(r.title)}</span>
-              <span class="sub">${esc(r.category)}<i class="dot"></i>${fmtDate(r.created_at)}</span>
+              <span class="sub">${sec === "전체" ? `${esc(r.section)}<i class="dot"></i>` : ""}${esc(r.category)}<i class="dot"></i>${fmtDate(r.created_at)}${r._files.length > 1 ? `<i class="dot"></i>${esc(kinds.join("·"))}` : ""}</span>
             </span>${ico("chevron-right", "toggle")}
           </summary>
           <div class="fold-body res-body">
             ${r.description ? `<p class="res-desc">${esc(r.description)}</p>` : ""}
-            <div class="file-card">
-              <span class="file-type" data-kind="${t.kind}">${esc(t.ext)}</span>
-              <span class="file-meta"><strong>${esc(name)}</strong><span>${esc(t.label)} 파일 · ${fmtDate(r.created_at)} 올림</span></span>
-              <a class="btn btn-dark" href="${esc(href)}" target="_blank" rel="noopener">${ico("download")}<span>받기</span></a>
-            </div>
+            <div class="file-cards">${r._files.map((f) => fileCard(f, r)).join("")}</div>
           </div>
         </details>`;
       };
 
       function draw() {
-        const list = current === "전체" ? data : data.filter((r) => r.category === current);
+        const inSec = sec === "전체" ? data : data.filter((r) => r.section === sec);
+        const cats = [...new Set(inSec.map((r) => r.category))];
+        if (!cats.includes(cat)) cat = "전체";
+        const list = cat === "전체" ? inSec : inSec.filter((r) => r.category === cat);
         box.innerHTML = `
-          ${cats.length > 1 ? `<div class="chips" role="tablist" aria-label="자료 분류">${["전체", ...cats].map((c) => {
-            const n = c === "전체" ? data.length : data.filter((r) => r.category === c).length;
-            return `<button type="button" role="tab" data-cat="${esc(c)}" aria-selected="${c === current}">${esc(c)}<span>${n}</span></button>`;
+          ${sections.length > 1 ? `<div class="sec-tabs" role="tablist" aria-label="큰 분류">${["전체", ...sections].map((s) => {
+            const n = s === "전체" ? data.length : data.filter((r) => r.section === s).length;
+            return `<button type="button" role="tab" data-sec="${esc(s)}" aria-selected="${s === sec}">${esc(s)}<span>${n}</span></button>`;
+          }).join("")}</div>` : ""}
+          ${sec !== "전체" && cats.length > 1 ? `<div class="chips" role="tablist" aria-label="작은 분류">${["전체", ...cats].map((c) => {
+            const n = c === "전체" ? inSec.length : inSec.filter((r) => r.category === c).length;
+            return `<button type="button" role="tab" data-cat="${esc(c)}" aria-selected="${c === cat}">${esc(c)}<span>${n}</span></button>`;
           }).join("")}</div>` : ""}
           <div class="list">${list.map(row).join("")}</div>`;
-        box.querySelectorAll("[data-cat]").forEach((b) => b.addEventListener("click", () => { current = b.dataset.cat; draw(); }));
+        box.querySelectorAll("[data-sec]").forEach((b) => b.addEventListener("click", () => { sec = b.dataset.sec; cat = "전체"; draw(); }));
+        box.querySelectorAll("[data-cat]").forEach((b) => b.addEventListener("click", () => { cat = b.dataset.cat; draw(); }));
       }
       draw();
       const target = location.hash && document.querySelector(location.hash);

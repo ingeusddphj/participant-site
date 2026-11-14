@@ -11,6 +11,7 @@ window.DEFAULT_SETTINGS = {
     eyebrow: "국민취업지원제도 참여자 안내",
     footer: "이 사이트는 참여자 안내를 위해 운영됩니다.\n이름·연락처 등 개인정보는 저장하지 않습니다.",
     hero_url: null,
+    resource_sections: ["제도 안내", "운영 안내", "취업 준비"],
   },
   menus: [
     { href: "notices.html",   icon_key: "megaphone",       name: "공지",             desc: "일정과 프로그램 안내",    visible: true, bottom: true },
