@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>응원 보드 시안</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gamja+Flower&family=Nanum+Pen+Script&display=swap">
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/cheer.css">
+</head>
+<body data-page="home" data-cheer-preview>
+  <div class="preview-bar">
+    <div class="container">
+      <span><strong>응원 보드 시안</strong> · 저장되지 않아요</span>
+      <span class="seg" role="group" aria-label="글씨체 고르기">
+        <button type="button" data-font="pen" aria-pressed="true">글씨체 1</button>
+        <button type="button" data-font="gaegu" aria-pressed="false">글씨체 2</button>
+        <button type="button" data-font="gamja" aria-pressed="false">글씨체 3</button>
+      </span>
+    </div>
+  </div>
+  <section class="hero" id="hero"></section>
+  <main>
+    <section class="quick container" aria-label="바로가기">
+      <ul class="quick-grid" data-menu-grid></ul>
+    </section>
+    <section class="section container" aria-labelledby="recent-title">
+      <div class="section-head">
+        <h2 id="recent-title">최근 공지</h2>
+        <a href="notices.html">전체 보기<span data-ico="chevron-right"></span></a>
+      </div>
+      <div data-list></div>
+    </section>
+    <section class="section container" aria-labelledby="cheer-title">
+      <div class="section-head">
+        <h2 id="cheer-title">응원 보드</h2>
+        <a href="#" onclick="cheerToast('전체 보기 화면은 시안 확정 후 만들어요');return false">전체 보기<span data-ico="chevron-right"></span></a>
+      </div>
+      <div class="cheer-board">
+        <div class="cheer-intro">
+          <p>함께 준비하는 분들께 짧은 응원을 남겨 주세요.<br>이름 대신 별명으로 붙어요.</p>
+          <button class="btn" type="button" data-cheer-write><span data-ico="plus"></span>응원 붙이기</button>
+        </div>
+        <ul class="cheer-grid" data-cheer data-limit="8"></ul>
+      </div>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/defaults.js"></script>
+  <script src="assets/site.js"></script>
+  <script src="assets/pages.js"></script>
+  <script src="assets/cheer.js"></script>
+  <script>
+    // 시안 전용: 글씨체 바꿔보기
+    const FONTS = { pen: ['"Nanum Pen Script"', ""], gaegu: ['"Gaegu"', "18px"], gamja: ['"Gamja Flower"', "18px"] };
+    document.querySelectorAll("[data-font]").forEach((b) => b.onclick = () => {
+      const [f, s] = FONTS[b.dataset.font];
+      document.documentElement.style.setProperty("--hand", `${f}, var(--font)`);
+      s ? document.documentElement.style.setProperty("--hand-size", s) : document.documentElement.style.removeProperty("--hand-size");
+      document.querySelectorAll("[data-font]").forEach((x) => x.setAttribute("aria-pressed", x === b));
+    });
+  </script>
+</body>
+</html>
