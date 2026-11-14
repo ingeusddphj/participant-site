@@ -30,15 +30,17 @@
 
   --font: "Pretendard Variable", "Pretendard", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   /* 서체 역할: 큰 제목 / 작은 영문 라벨 / 날짜·숫자 */
-  --font-head: var(--font);
-  --head-weight: 700;
-  --head-tracking: -0.045em;
-  --font-kicker: var(--font);
-  --kicker-case: uppercase;
-  --kicker-size: 12px;
-  --kicker-tracking: .16em;
-  --kicker-style: normal;
-  --kicker-weight: 700;
+  /* 서체 조합 2(에디토리얼): 제목 마루 부리 / 영문 라벨 Instrument Serif / 본문 프리텐다드 */
+  --font-head: "MaruBuriBold", "Pretendard Variable", serif;
+  --head-weight: 400;
+  --head-tracking: -0.03em;
+  --font-serif-en: "Instrument Serif", "MaruBuri", serif;
+  --font-kicker: var(--font-serif-en);
+  --kicker-case: none;
+  --kicker-size: 19px;
+  --kicker-tracking: 0;
+  --kicker-style: italic;
+  --kicker-weight: 400;
   --font-num: var(--font);
 
   /* 테마 A(기본): 인지어스 노랑 */
@@ -195,45 +197,49 @@ button { font: inherit; }
 .hero .container > :nth-child(3) { animation-delay: .16s; }
 @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
 
-/* ── 메인: 바로가기 카드 ── */
-.quick { position: relative; padding-top: 8px; }
-.quick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
-@media (min-width: 900px) { .quick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
-.quick-card {
+/* ── 메인: 바로가기 (목차형: 번호 + 명조 제목 + 가는 선) ── */
+.quick { position: relative; padding-top: 16px; }
+@media (min-width: 900px) { .quick { padding-top: 32px; } }
+.quick-grid { display: grid; margin: 0; padding: 0; list-style: none; box-shadow: inset 0 -1px 0 var(--line); }
+@media (min-width: 900px) { .quick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 40px; } }
+.quick-item {
   position: relative;
-  display: flex; flex-direction: column; align-items: flex-start;
-  height: 100%; min-height: 148px;
-  padding: 18px 16px 18px;
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
+  display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px; grid-template-areas: "num main arrow";
+  align-items: center; gap: 14px;
+  padding: 20px 0;
   color: var(--text); text-decoration: none;
-  transition: transform .5s var(--ease), box-shadow .5s var(--ease);
+  box-shadow: inset 0 1px 0 var(--line);
 }
-.quick-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-.quick-card:active { transform: scale(.985); transition-duration: .15s; }
-.q-ico {
-  display: grid; place-items: center; flex: none;
-  width: 42px; height: 42px; margin-bottom: auto;
-  border-radius: 50%;
-  background: var(--surface-2); color: var(--text);
-  overflow: hidden;
-  transition: background-color .4s var(--ease), color .4s var(--ease);
+.quick-item::after { /* 올리면 선이 왼쪽부터 그어짐 */
+  content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 1.5px;
+  background: var(--ink); transform: scaleX(0); transform-origin: left;
+  transition: transform .7s var(--ease);
 }
-.q-ico .ico { font-size: 20px; }
-.q-ico img { width: 100%; height: 100%; object-fit: cover; }
-.quick-card:hover .q-ico:not(.is-img) { background: var(--primary); color: var(--on-primary); }
-.quick-card .name { display: block; margin-top: 22px; font-size: 16.5px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.3; }
-.quick-card .desc { display: block; margin-top: 4px; font-size: 13.5px; line-height: 1.45; color: var(--muted); }
-.quick-card .arrow { position: absolute; top: 18px; right: 16px; font-size: 18px; color: var(--border-strong); transition: color .4s var(--ease), transform .4s var(--ease); }
-.quick-card:hover .arrow { color: var(--text); transform: translate(2px, -2px); }
+.quick-item:hover::after, .quick-item:focus-visible::after { transform: scaleX(1); }
+.qi-num { grid-area: num; font-family: var(--font-serif-en); font-style: italic; font-size: 19px; line-height: 1; color: var(--muted); transition: color .4s var(--ease); }
+.qi-num img { width: 40px; height: 40px; border-radius: 12px; object-fit: cover; }
+.qi-main { grid-area: main; min-width: 0; }
+.quick-item .name { display: block; font-family: var(--font-head); font-weight: var(--head-weight); font-size: 20px; line-height: 1.3; letter-spacing: var(--head-tracking); }
+.quick-item .desc { display: block; margin-top: 3px; font-size: 13.5px; line-height: 1.45; color: var(--muted); }
+.qi-arrow {
+  grid-area: arrow; justify-self: end;
+  display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--border-strong); color: var(--text);
+  transition: background-color .45s var(--ease), box-shadow .45s var(--ease), color .45s var(--ease);
+}
+.qi-arrow .ico { font-size: 17px; transition: transform .45s var(--ease); }
+.quick-item:hover .qi-arrow { background: var(--primary); color: var(--on-primary); box-shadow: inset 0 0 0 1px var(--primary); }
+.quick-item:hover .qi-arrow .ico { transform: rotate(45deg); }
+.quick-item:hover .qi-num { color: var(--text); }
+.quick-item:active { opacity: .7; }
 @media (min-width: 900px) {
-  .quick-card { min-height: 200px; padding: 28px 28px 26px; }
-  .q-ico { width: 52px; height: 52px; }
-  .q-ico .ico { font-size: 24px; }
-  .quick-card .name { margin-top: 32px; font-size: 20px; }
-  .quick-card .desc { font-size: 15px; }
-  .quick-card .arrow { top: 28px; right: 26px; font-size: 20px; }
+  .quick-item {
+    grid-template-columns: minmax(0, 1fr) 44px; grid-template-areas: "num arrow" "main main";
+    align-items: start; row-gap: 40px; padding: 26px 0 34px;
+  }
+  .qi-arrow { width: 44px; height: 44px; }
+  .quick-item .name { font-size: 27px; }
+  .quick-item .desc { margin-top: 6px; font-size: 15px; }
 }
 
 /* 아이콘 타일 (관리자 화면의 메뉴 편집에서 사용) */
