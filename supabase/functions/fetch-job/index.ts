@@ -1,8 +1,10 @@
 // 잡코리아 공고 링크를 받아 기업명·마감일·경력·학력 등을 읽어 주는 기능 (Supabase Edge Function)
 // 관리자 페이지 → 채용정보 → "링크로 채우기" 버튼이 이 기능을 부릅니다.
 // 설치: Supabase 대시보드 → Edge Functions → Deploy a new function → Via Editor
-//       이름을 fetch-job 으로 하고 이 파일 내용을 그대로 붙여넣은 뒤 Deploy.
-// 로그인한 사람(관리자)만 부를 수 있고, 잡코리아 주소만 읽습니다.
+//       함수 이름을 정확히 fetch-job 으로 하고 이 파일 내용을 그대로 붙여넣은 뒤 Deploy.
+//       설치 후 함수 설정에서 "Enforce JWT Verification(JWT 확인)"은 꺼 주세요.
+//       (관리자인지는 아래 isAdmin 에서 직접 확인합니다)
+// 관리자로 로그인한 사람만 쓸 수 있고, 잡코리아 주소만 읽습니다.
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -47,9 +49,23 @@ function extract(html: string) {
   };
 }
 
+// 부른 사람이 관리자인지 확인 (DB의 is_admin 함수에 그 사람의 로그인 정보로 물어봄)
+async function isAdmin(req: Request) {
+  const auth = req.headers.get("Authorization") || "";
+  const apikey = req.headers.get("apikey") || Deno.env.get("SUPABASE_ANON_KEY") || "";
+  if (!auth.startsWith("Bearer ")) return false;
+  const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/rest/v1/rpc/is_admin`, {
+    method: "POST",
+    headers: { apikey, Authorization: auth, "Content-Type": "application/json" },
+    body: "{}",
+  });
+  return r.ok && (await r.json()) === true;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   try {
+    if (!(await isAdmin(req))) return json({ error: "관리자로 로그인한 상태에서만 쓸 수 있어요. 관리자 페이지를 새로고침하고 다시 해 주세요." }, 401);
     const { url } = await req.json();
     const u = new URL(String(url || ""));
     if (!/(^|\.)jobkorea\.co\.kr$/.test(u.hostname)) return json({ error: "지금은 잡코리아 공고 링크만 읽을 수 있어요." }, 400);

@@ -823,10 +823,14 @@
       try {
         const { data, error } = await db.functions.invoke("fetch-job", { body: { url: link } });
         if (error) {
-          let msg = "";
-          try { msg = (await error.context.json()).error; } catch (_) {}
-          if (!msg && /Failed to send|FunctionsFetchError|404|not found/i.test(String(error.name) + String(error.message))) msg = "링크 읽기 기능이 아직 설치되지 않았어요. 안내대로 Supabase에 fetch-job 을 설치해 주세요.";
-          throw new Error(msg || error.message);
+          // 무엇이 문제인지 그대로 알려 줌
+          let body = {}, status = error.context && error.context.status;
+          try { body = await error.context.json(); } catch (_) {}
+          let msg = body.error || "";
+          if (!msg && (status === 404 || body.code === "NOT_FOUND")) msg = "Supabase에서 'fetch-job' 이라는 이름의 기능을 찾지 못했어요. Edge Functions 목록에서 이름이 정확히 fetch-job 인지 확인해 주세요.";
+          else if (!msg && status === 401) msg = "Supabase가 로그인 확인에서 막았어요. fetch-job 설정에서 'Enforce JWT Verification(JWT 확인)'을 꺼 주세요.";
+          else if (!msg && error.name === "FunctionsFetchError") msg = "fetch-job 기능에 연결하지 못했어요. 이름이 fetch-job 인지, 설정에서 JWT 확인을 껐는지 확인해 주세요.";
+          throw new Error(msg || `${error.message}${status ? " (" + status + ")" : ""}`);
         }
         const j = fromJobkorea(data);
         const blank = !c.querySelector('[data-k="company"]').value.trim();
