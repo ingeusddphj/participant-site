@@ -128,10 +128,16 @@
     else if (types.includes("PART_TIME")) employment = "아르바이트";
     const mon = title.match(/(\d+)\s*개월/);
     const edu = String(r.education || "").replace(/\s*이상/, "↑").replace(/^(대학교?\s*졸업|대학교\(4년\))/, "대졸").trim();
-    const addr = String(r.address || "").replace(/^\s*대한민국\s*/, "").trim().split(/\s+/);
-    const first = (addr[0] || "").replace(/(특별시|광역시|특별자치시|특별자치도)$/, "").replace(/^(경기|강원|충청북|충청남|전라북|전라남|경상북|경상남|제주)도$/, "$1")
-      .replace("충청북", "충북").replace("충청남", "충남").replace("전라북", "전북").replace("전라남", "전남").replace("경상북", "경북").replace("경상남", "경남");
-    const region = [first, addr[1] && /(구|시|군)$/.test(addr[1]) ? addr[1] : ""].filter(Boolean).join(" ");
+    // 주소 → '서울 강남구'처럼 시·도 + 시·군·구
+    const toRegion = (a) => {
+      const w = String(a || "").replace(/^\s*대한민국\s*/, "").trim().split(/\s+/);
+      const first = (w[0] || "").replace(/(특별시|광역시|특별자치시|특별자치도)$/, "").replace(/^(경기|강원|충청북|충청남|전라북|전라남|경상북|경상남|제주)도$/, "$1")
+        .replace("충청북", "충북").replace("충청남", "충남").replace("전라북", "전북").replace("전라남", "전남").replace("경상북", "경북").replace("경상남", "경남");
+      return [first, w[1] && /(구|시|군)$/.test(w[1]) ? w[1] : ""].filter(Boolean).join(" ");
+    };
+    const places = [...new Set((r.addresses || []).map(toRegion).filter(Boolean))];
+    let region = places[0] || toRegion(r.address);
+    if (places.length > 1) region += " 등"; // 근무지가 여러 곳이면 첫 지역 뒤에 '등'
     const sum = String(r.summary || "");
     const dl = sum.match(/마감일\s*:\s*([^,]+)/);
     let deadline = null, rolling = false;

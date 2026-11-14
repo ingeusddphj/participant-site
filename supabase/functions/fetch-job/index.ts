@@ -35,6 +35,9 @@ function extract(html: string) {
     const m = html.match(re);
     return m ? decode(m[1]) : "";
   };
+  // 근무지가 여러 곳이면 페이지 안 locationAttributes 목록에 모두 들어 있음
+  const la = html.match(/\\?"locationAttributes\\?":\[(.*?)\]/);
+  const addresses = la ? [...la[1].matchAll(/\\?"address\\?":\\?"(.*?)\\?"/g)].map((m) => decode(m[1]).trim()).filter(Boolean) : [];
   const p = (posting || {}) as Record<string, any>;
   const loc = Array.isArray(p.jobLocation) ? p.jobLocation[0] : p.jobLocation;
   return {
@@ -45,6 +48,7 @@ function extract(html: string) {
     experience: p.experienceRequirements || "",
     education: typeof p.educationRequirements === "string" ? p.educationRequirements : p.educationRequirements?.credentialCategory || "",
     address: loc?.address?.streetAddress || loc?.address?.addressLocality || "",
+    addresses,
     summary: meta("description") || meta("og:description"),
     ogTitle: meta("og:title"),
   };

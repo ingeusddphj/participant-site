@@ -522,6 +522,9 @@ a.list-row:hover .chev { color: var(--text); transform: translateX(3px); }
 .rec-note .ico { font-size: 20px; color: var(--primary-ink); margin-top: 1px; }
 .rec-note b { color: var(--text); }
 .job-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+dialog.rec-dialog { width: min(420px, calc(100vw - 24px)); }
+.rec-dialog .picker-body p { margin: 0 0 10px; color: var(--text-2); font-size: 15.5px; line-height: 1.65; }
+.rec-dialog .rec-job { padding: 12px 14px; border-radius: 12px; background: var(--bg); color: var(--text) !important; }
 @media (max-width: 639px) { .job-actions .btn { flex: 1; } }
 
 /* 시안 전용: 자동 입력 시험 */

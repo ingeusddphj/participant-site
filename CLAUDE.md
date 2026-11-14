@@ -77,6 +77,9 @@
 - 급여는 대부분 협의라 목록에서 빼고 펼쳤을 때만
 - 잡코리아 링크 자동 채우기: Supabase Edge Function `supabase/functions/fetch-job` (설치된 이름은 clever-processor, assets/config.js의 jobFetchFunction. 대시보드 Edge Functions → Via Editor로 설치, JWT 확인 켜 둠 = 로그인한 관리자만, 잡코리아 주소만 허용)이 공고 페이지의 JobPosting 정보·meta description을 읽어 줌 → assets/jobparse.js `fromJobkorea()`가 칸으로 변환. 2026-11-14 실제 공고 9개로 시험해 기업명·고용형태·경력·학력·지역·마감 모두 정확. 직무는 공고 제목이 들어오니 상담사가 다듬음
 - 링크만 여러 줄 붙여넣어도 공고 칸이 생기고 하나씩 자동으로 읽음
+- 근무지가 여러 곳이면(페이지 안 locationAttributes) 첫 지역 + ' 등' (예: 대전 서구 등). 같은 주소 중복은 한 곳으로 셈
+- 참여자 화면 인재추천 가능 공고: 안내 문구 '지원하고 싶으시면 상담사에게 말씀해주세요. 추천서를 준비해 드려요.' + 원문 공고 보기 옆 '인재추천 희망' 버튼
+- (예정) '인재추천 희망' 창: 이름·휴대폰 번호·상담사에게 이력서를 제출했는지(예/아니오) → 어느 쪽이든 '상담사가 곧 연락드려요' 안내, 상담사 메일로 전송. **개인정보라 Supabase DB에 저장하지 말고 메일로만 보낼 것**, 받는 목적·보관 안내 문구 함께
 
 ### 자료실 구조 (2026-11-14)
 - 큰 분류 `resources.section` (목록은 `site_settings.extra.resource_sections`, 기본 제도 안내/운영 안내/취업 준비, 관리자 자료실 탭에서 편집) + 작은 분류 `category`(자유 입력)

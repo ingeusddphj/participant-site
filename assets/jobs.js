@@ -16,6 +16,27 @@
     return `<span class="dday${n <= 3 ? " is-urgent" : ""}"><small>D-</small>${n}</span>`;
   }
 
+  // '인재추천 희망' 창 — 지금은 안내만. 나중에 이름·연락처·이력서 제출 여부를 받아 상담사 메일로 보냄
+  // (개인정보는 사이트 DB에 저장하지 않고 메일로만 보낼 것)
+  function openRecAsk(j) {
+    let dlg = document.getElementById("rec-ask");
+    if (!dlg) {
+      dlg = document.createElement("dialog");
+      dlg.id = "rec-ask";
+      dlg.className = "picker rec-dialog";
+      document.body.append(dlg);
+    }
+    dlg.innerHTML = `<form method="dialog">
+      <div class="picker-head"><h2>인재추천 희망</h2><button class="btn btn-ghost btn-sm" value="close" aria-label="닫기">${ico("x")}</button></div>
+      <div class="picker-body">
+        <p class="rec-job"><b>${esc(j.role)}</b> · ${esc(j.company)}</p>
+        <p>인재추천 신청 창은 곧 열려요.<br>지금은 상담사에게 직접 말씀해 주시면 추천서를 준비해 드려요.</p>
+      </div>
+      <div class="picker-foot"><button class="btn btn-dark btn-block" value="close">확인</button></div>
+    </form>`;
+    dlg.showModal();
+  }
+
   window.renderJobs = function (box, all, opts = {}) {
     const state = { emp: new Set(), career: new Set(), area: new Set(), cat: "", q: "", rec: false, soon: false, fresh: false };
     const live = () => all.filter((j) => { const n = dleft(j); return n === null || n >= 0; });
@@ -66,9 +87,10 @@
           ${j.salary ? `<div><dt>급여</dt><dd>${esc(j.salary)}</dd></div>` : ""}
           <div><dt>마감</dt><dd>${j.rolling || !j.deadline ? "채용 시 마감" : esc(fmt(j.deadline))}</dd></div>
         </dl>
-        ${j.recommend ? `<p class="rec-note">${ico("heart-handshake")}<span><b>인재추천 가능 공고예요.</b> 지원하고 싶다면 상담사에게 말해 주세요. 추천서를 함께 준비해 드려요.</span></p>` : ""}
+        ${j.recommend ? `<p class="rec-note">${ico("heart-handshake")}<span><b>인재추천 가능 공고예요.</b> 지원하고 싶으시면 상담사에게 말씀해주세요. 추천서를 준비해 드려요.</span></p>` : ""}
         <div class="job-actions">
           ${j.link ? `<a class="btn btn-dark" href="${esc(j.link)}" target="_blank" rel="noopener">원문 공고 보기${ico("arrow-up-right")}</a>` : ""}
+          ${j.recommend ? `<button class="btn" type="button" data-rec-ask="${i}">${ico("heart-handshake")}인재추천 희망</button>` : ""}
         </div>
       </div>
     </details>`;
@@ -107,6 +129,8 @@
     }
 
     box.addEventListener("click", async (e) => {
+      const ask = e.target.closest("[data-rec-ask]");
+      if (ask) return openRecAsk(shown[+ask.dataset.recAsk]);
       const f = e.target.closest(".fchip"), t = e.target.closest("[data-t]");
       if (f) {
         const { g, v } = f.dataset;
