@@ -803,6 +803,7 @@
             <label class="field"><span>마감일</span><input type="date" data-k="deadline" value="${esc(j.deadline || "")}"${j.rolling ? " disabled" : ""}></label>
             <label class="field span2"><span>기타 자격요건</span><input type="text" data-k="etc" value="${esc(j.etc || "")}"></label>
             <label class="field"><span>급여 <span class="hint">선택</span></span><input type="text" data-k="salary" value="${esc(j.salary || "")}"></label>
+            <label class="field span-all"><span>상담사 코멘트 <span class="hint">선택 · 쓰면 참여자 화면에 함께 보여요 (카톡 문구에는 안 들어가요)</span></span><textarea data-k="note" rows="2" placeholder="예: 신입도 실무 교육이 탄탄한 곳이에요. 서류 준비 같이 해요!">${esc(j.note || "")}</textarea></label>
             <div class="field job-switches">
               <label class="switch"><input type="checkbox" data-k="rolling"${j.rolling ? " checked" : ""}> 상시·채용 시 마감</label>
               <label class="switch"><input type="checkbox" data-k="recommend"${j.recommend !== false ? " checked" : ""}> 인재추천 가능</label>
@@ -825,7 +826,7 @@
       j.category = j.category || null;
       j.deadline = j.rolling ? null : j.deadline || null;
       j.area = regionArea(j.region || "");
-      ["link", "career", "education", "region", "etc", "salary"].forEach((k) => (j[k] = j[k] || null));
+      ["link", "career", "education", "region", "etc", "salary", "note"].forEach((k) => (j[k] = j[k] || null));
       return j;
     }
     function showDrafts(jobs, editing) {
@@ -922,7 +923,8 @@
           $("[data-paste]", panel).value = "";
           load();
         } catch (err) {
-          if (/jobs/.test(String(err && err.message)) && /relation|schema|find|exist/i.test(String(err.message))) toast("DB 준비가 필요해요: supabase/migrations/005_jobs.sql 을 실행해 주세요.", true);
+          if (/note/.test(String(err && err.message)) && /column|schema/i.test(String(err.message))) toast("DB 업데이트가 필요해요: supabase/migrations/006_jobs_note.sql 을 실행해 주세요.", true);
+          else if (/jobs/.test(String(err && err.message)) && /relation|schema|find|exist/i.test(String(err.message))) toast("DB 준비가 필요해요: supabase/migrations/005_jobs.sql 을 실행해 주세요.", true);
           else fail(err);
         } finally { sv.disabled = false; }
       }
@@ -956,7 +958,7 @@
         ? `<div class="list admin-list">${show.map((j) => `<div class="list-row${!j.visible ? " is-hidden" : ""}">
             <span class="job-d">${dtext(j)}</span>
             <span class="body"><span class="title">${!j.visible ? '<span class="badge badge-neutral">숨김</span>' : ""}${esc(j.role)} · ${esc(j.company)}${j.category ? ` <span class="badge badge-neutral">${esc(j.category)}</span>` : ""}</span>
-              <span class="sub">${esc([j.employment + (j.months ? ` ${j.months}개월` : ""), j.career, j.education, j.region].filter(Boolean).join(" · "))}${j.recommend ? " · 인재추천 가능" : ""}</span></span>
+              <span class="sub">${esc([j.employment + (j.months ? ` ${j.months}개월` : ""), j.career, j.education, j.region].filter(Boolean).join(" · "))}${j.recommend ? " · 인재추천 가능" : ""}${j.note ? " · 코멘트 있음" : ""}</span></span>
             <span class="actions">
               <button class="btn btn-secondary btn-sm" data-copy="${esc(j.id)}" title="카톡으로 보내던 형식으로 복사">${ico("clipboard-list")}카톡 복사</button>
               <button class="btn btn-secondary btn-sm" data-edit="${esc(j.id)}">수정</button>

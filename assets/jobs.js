@@ -86,11 +86,13 @@
         <span class="body">
           <span class="title"><span class="role">${esc(j.role)}</span><span class="co">${esc(j.company)}</span>${j.category ? `<span class="cat">${esc(j.category)}</span>` : ""}${j.recommend ? '<span class="rec-inline">인재추천 가능</span>' : ""}${isNew(j) ? '<span class="badge badge-primary">NEW</span>' : ""}</span>
           <span class="meta"><span class="emp" data-k="${empKind(j)}">${esc(empText(j))}</span>${[j.career, j.education, j.region].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join("")}</span>
+          ${j.note ? `<span class="job-note">${ico("messages-square")}<span>${esc(j.note)}</span></span>` : ""}
         </span>
         ${j.recommend ? `<span class="rec" title="상담사를 통해 추천 지원할 수 있어요">인재추천<b>가능</b></span>` : ""}
         ${ico("chevron-right", "toggle")}
       </summary>
       <div class="fold-body job-body">
+        ${j.note ? `<div class="job-note-full"><span class="who">상담사 코멘트</span><p>${esc(j.note)}</p></div>` : ""}
         <dl class="job-dl">
           <div><dt>고용형태</dt><dd>${esc(empText(j))}</dd></div>
           <div><dt>경력</dt><dd>${esc(j.career || "-")}</dd></div>

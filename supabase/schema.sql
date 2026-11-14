@@ -243,6 +243,7 @@ create table if not exists public.jobs (
   rolling boolean not null default false,  -- 상시·채용 시 마감
   recommend boolean not null default true, -- 인재추천 가능
   visible boolean not null default true,   -- 숨기기
+  note text,                       -- 상담사 코멘트 (선택)
   created_at timestamptz not null default now()
 );
 create index if not exists jobs_deadline_idx on public.jobs (deadline);
@@ -260,3 +261,5 @@ create policy "jobs_admin_update" on public.jobs for update using (public.is_adm
 drop policy if exists "jobs_admin_delete" on public.jobs;
 create policy "jobs_admin_delete" on public.jobs for delete using (public.is_admin());
 
+
+alter table public.jobs add column if not exists note text;

@@ -500,6 +500,14 @@ a.list-row:hover .chev { color: var(--text); transform: translateX(3px); }
 .job .emp[data-k="full"] { color: var(--text); }
 .job .emp[data-k="contract"] { color: #6b6156; }
 .job .emp[data-k="intern"] { color: #a26f00; }
+.job-note { display: flex; align-items: center; gap: 6px; margin-top: 7px; min-width: 0; font-size: 13.5px; color: var(--primary-ink); }
+[data-theme="a"] .job-note { color: #8a6200; }
+.job-note .ico { flex: none; font-size: 14px; }
+.job-note span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fold.job[open] .job-note { display: none; }
+.job-note-full { margin: 0 0 14px; padding: 14px 18px; border-radius: 16px; background: var(--primary-soft); box-shadow: inset 3px 0 0 var(--primary); }
+.job-note-full .who { display: block; margin-bottom: 4px; font-size: 12.5px; font-weight: 700; color: var(--primary-ink); }
+.job-note-full p { margin: 0; color: var(--text); font-size: 15px; line-height: 1.65; white-space: pre-wrap; }
 .rec-inline { display: none; }
 .rec { flex: none; display: inline-flex; flex-direction: column; align-items: center; padding: 6px 10px; border-radius: 12px; background: var(--primary-soft); color: var(--primary-ink); font-size: 11px; font-weight: 600; line-height: 1.25; }
 .rec b { font-size: 13px; font-weight: 800; }
@@ -640,8 +648,9 @@ dialog.rec-dialog { width: min(420px, calc(100vw - 24px)); }
 .drafts-head .count { font-size: 14px; color: var(--muted); font-weight: 600; }
 .job-edit { box-shadow: 0 0 0 1.5px var(--ink), var(--shadow-sm); }
 .job-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px; }
-.job-grid .span2 { grid-column: 1 / -1; }
+.job-grid .span2, .job-grid .span-all { grid-column: 1 / -1; }
 @media (min-width: 900px) { .job-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } .job-grid .span2 { grid-column: span 2; } }
+.job-grid textarea { width: 100%; min-height: 70px; padding: 10px 12px; font-size: 15px; }
 .job-grid .field { margin-bottom: 14px; }
 .job-grid .field input:not([type="checkbox"]), .job-grid .field select { min-height: 42px; padding: 8px 12px; font-size: 15px; }
 .job-switches { justify-content: flex-end; gap: 10px; }
