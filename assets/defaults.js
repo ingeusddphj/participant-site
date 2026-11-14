@@ -16,7 +16,7 @@ window.DEFAULT_SETTINGS = {
     { href: "notices.html",   icon_key: "megaphone",       name: "공지",             desc: "일정과 프로그램 안내",    visible: true, bottom: true },
     { href: "jobs.html",      icon_key: "briefcase",       name: "채용정보",         desc: "직무·경력·지역별 공고",   visible: true, bottom: true },
     { href: "resources.html", icon_key: "folder-open",     name: "자료실",           desc: "이력서·자소서·면접 자료", visible: true, bottom: true },
-    { href: "board.html",     icon_key: "messages-square", name: "익명 게시판",      desc: "고민과 후기 나누기",      visible: true, bottom: true },
+    { href: "board.html",     icon_key: "sticky-note",     name: "응원 보드",        desc: "서로에게 짧은 응원 남기기", visible: true, bottom: true },
     { href: "contact.html",   icon_key: "send",            name: "상담사에게 보내기", desc: "건의·질문·상담요청",      visible: true, bottom: false },
     { href: "faq.html",       icon_key: "circle-help",     name: "자주 묻는 질문",   desc: "수당·출석·구직활동 인정", visible: true, bottom: true },
   ],
@@ -30,6 +30,7 @@ window.ICON_CHOICES = [
   ["messages-square", "게시판"], ["send", "보내기"], ["phone", "전화"], ["users", "모임"],
   ["circle-help", "질문"], ["lightbulb", "팁"], ["graduation-cap", "교육"], ["heart-handshake", "지원"],
   ["chart-column", "통계"], ["star", "추천"], ["house", "홈"], ["pin", "고정"],
+  ["sticky-note", "메모"],
 ];
 
 window.THEMES = {
@@ -71,6 +72,8 @@ window.normalizeMenus = function (menus) {
   const list = Array.isArray(menus) && menus.length ? menus : defs;
   return list.map((m) => {
     const d = defs.find((x) => x.href === m.href) || {};
+    // 익명 게시판 → 응원 보드로 바뀜 (이름을 직접 바꾸지 않았다면 새 이름으로)
+    if (m.href === "board.html" && m.name === "익명 게시판") m = Object.assign({}, m, { name: d.name, desc: d.desc, icon_key: m.icon_url ? m.icon_key : d.icon_key });
     return Object.assign({}, d, m, { icon_key: m.icon_key || d.icon_key || "file-text" });
   });
 };

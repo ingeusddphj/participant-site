@@ -18,6 +18,7 @@
     console.error(e);
     const msg = String(e && (e.message || e));
     if (/extra/.test(msg) && /column/.test(msg)) return toast("DB 업데이트가 필요해요: supabase/migrations/002_extra.sql 을 실행해 주세요.", true);
+    if (/cheers|report_cheer/.test(msg) && /relation|schema|does not exist|find/i.test(msg)) return toast("DB 업데이트가 필요해요: supabase/migrations/003_cheers.sql 을 실행해 주세요.", true);
     if (/exceeded|too large|413/i.test(msg)) return toast("파일이 너무 커요. 50MB 이하로 올려 주세요.", true);
     toast("저장하지 못했어요: " + msg, true);
   }
@@ -51,6 +52,7 @@
     show("admin");
     await loadSettings();
     Object.keys(COLLECTIONS).forEach((k) => initCollection(k));
+    initCheers();
   }
 
   // ───────── 탭 ─────────
@@ -519,6 +521,114 @@
         toast("저장했어요.");
         closeForm();
         load();
+      } catch (err) {
+        fail(err);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    load();
+  }
+
+  // ───────── 응원 보드 ─────────
+  function initCheers() {
+    const panel = $('[data-panel="cheers"]');
+    const COLOR = { yellow: "#f9eb9c", pink: "#f6d2d3", mint: "#d2e9d6", sky: "#d3e2ef", lilac: "#e2d9ec" };
+    panel.innerHTML = `
+      <h1 class="admin-title">응원 보드</h1>
+      <p class="admin-desc">참여자들이 붙인 응원 메모예요. 신고가 3번 쌓인 메모는 자동으로 가려져요. 숨긴 메모는 다시 보이게 할 수 있어요.</p>
+      <div class="seg-tabs" role="group" aria-label="보기">
+        <button type="button" data-filter="all" aria-pressed="true">전체</button>
+        <button type="button" data-filter="flag" aria-pressed="false">신고·숨김 <b data-flag-count></b></button>
+      </div>
+      <div data-items><div class="list"><div class="skeleton"></div><div class="skeleton"></div></div></div>
+      <form class="panel" data-banned style="margin-top:24px">
+        <div class="panel-head"><h2>금지어</h2><p>한 줄에 하나씩 적어 주세요. 이 말이 들어간 메모는 붙지 않아요. 욕설·전화번호·이메일·링크는 이미 막혀 있어요.</p></div>
+        <div class="panel-body">
+          <label class="field"><span>추가 금지어</span><textarea name="words" rows="5" placeholder="예: 광고&#10;대출"></textarea></label>
+          <button class="btn btn-dark" type="submit">금지어 저장</button>
+        </div>
+      </form>`;
+
+    let rows = [];
+    let filter = "all";
+    const list = $("[data-items]", panel);
+    const when = (iso) => new Date(iso).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" });
+
+    function render() {
+      const flagged = rows.filter((r) => r.hidden || r.report_count > 0);
+      $("[data-flag-count]", panel).textContent = flagged.length || "";
+      const show = filter === "flag" ? flagged : rows;
+      list.innerHTML = show.length
+        ? `<div class="list admin-list">${show.map((r) => `<div class="list-row${r.hidden ? " is-hidden" : ""}">
+            <span class="cheer-dot" style="background:${COLOR[r.color] || COLOR.yellow}"></span>
+            <span class="body"><span class="title">${r.hidden ? '<span class="badge badge-neutral">숨김</span>' : ""}${r.report_count ? `<span class="badge badge-danger">신고 ${r.report_count}</span>` : ""}${esc(r.body)}</span>
+              <span class="sub">${esc(r.nickname)} · ${when(r.created_at)}</span></span>
+            <span class="actions">
+              <button class="btn btn-secondary btn-sm" data-toggle="${esc(r.id)}">${r.hidden ? "다시 보이기" : "숨기기"}</button>
+              <button class="btn btn-danger btn-sm" data-del="${esc(r.id)}">삭제</button>
+            </span></div>`).join("")}</div>`
+        : `<div class="list"><div class="empty">${ico("sticky-note")}<strong>${filter === "flag" ? "신고되거나 숨긴 메모가 없어요" : "아직 붙은 응원이 없어요"}</strong></div></div>`;
+    }
+
+    async function load() {
+      const { data, error } = await db.from("cheers").select("*").order("created_at", { ascending: false }).limit(1000);
+      if (error) {
+        console.error(error);
+        list.innerHTML = `<div class="list"><div class="empty">${ico("sticky-note")}<strong>DB 준비가 필요해요</strong><p>Supabase SQL Editor에서 supabase/migrations/003_cheers.sql 을 실행해 주세요.</p></div></div>`;
+        return;
+      }
+      rows = data;
+      render();
+    }
+
+    $$("[data-filter]", panel).forEach((b) => b.addEventListener("click", () => {
+      filter = b.dataset.filter;
+      $$("[data-filter]", panel).forEach((x) => x.setAttribute("aria-pressed", x === b));
+      render();
+    }));
+
+    list.addEventListener("click", async (e) => {
+      const tg = e.target.closest("[data-toggle]");
+      const del = e.target.closest("[data-del]");
+      if (tg) {
+        const r = rows.find((x) => x.id === tg.dataset.toggle);
+        const patch = r.hidden ? { hidden: false, report_count: 0 } : { hidden: true };
+        const { error } = await db.from("cheers").update(patch).eq("id", r.id);
+        if (error) return fail(error);
+        Object.assign(r, patch);
+        toast(patch.hidden ? "숨겼어요. 사이트에서 안 보여요." : "다시 보이게 했어요.");
+        render();
+      }
+      if (del) {
+        const r = rows.find((x) => x.id === del.dataset.del);
+        if (!confirm(`'${r.body}' 메모를 삭제할까요? 되돌릴 수 없어요.`)) return;
+        const { error } = await db.from("cheers").delete().eq("id", r.id);
+        if (error) return fail(error);
+        rows = rows.filter((x) => x !== r);
+        toast("삭제했어요.");
+        render();
+      }
+    });
+
+    const bf = $("[data-banned]", panel);
+    bf.elements.words.value = ((saved && saved.extra.cheer_banned) || []).join("\n");
+    bf.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = bf.querySelector("button");
+      btn.disabled = true;
+      try {
+        const words = [...new Set(bf.elements.words.value.split(/[\n,]/).map((w) => w.trim()).filter(Boolean))];
+        const { data, error: e1 } = await db.from("site_settings").select("extra").eq("id", 1).single();
+        if (e1) throw e1;
+        const extra = Object.assign({}, data.extra || {}, { cheer_banned: words });
+        const { error } = await db.from("site_settings").update({ extra }).eq("id", 1);
+        if (error) throw error;
+        if (saved) saved.extra.cheer_banned = words;
+        try { localStorage.removeItem("site-settings-v2"); } catch (_) {}
+        bf.elements.words.value = words.join("\n");
+        toast("금지어를 저장했어요.");
       } catch (err) {
         fail(err);
       } finally {

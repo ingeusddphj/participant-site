@@ -131,7 +131,9 @@
 }
 @media (prefers-reduced-motion: reduce) { .note, .note.is-new { animation: none; transition: none; } }
 
-.cheer-more { margin-top: 26px; text-align: center; }
+.cheer-more { margin-top: 30px; text-align: center; }
+.cheer-more:has([hidden]) { display: none; }
+.page-body .cheer-intro { margin-top: 4px; }
 
 /* 붙이기 창 */
 dialog.cheer-dialog { width: min(460px, calc(100vw - 24px)); }
@@ -166,8 +168,3 @@ dialog.cheer-dialog { width: min(460px, calc(100vw - 24px)); }
 .cheer-dialog .picker-foot { display: flex; gap: 8px; justify-content: flex-end; }
 .cheer-dialog .picker-foot .btn { flex: 1; }
 @media (min-width: 640px) { .cheer-dialog .picker-foot .btn { flex: none; min-width: 110px; } }
-
-/* 시안 미리보기 전용 띠 */
-.preview-bar { background: #0f172a; color: #fff; font-size: 14px; }
-.preview-bar .container { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding-top: 10px; padding-bottom: 10px; }
-.preview-bar strong { font-weight: 700; }
