@@ -53,6 +53,7 @@
     await loadSettings();
     Object.keys(COLLECTIONS).forEach((k) => initCollection(k));
     initResources();
+    initJobs();
     initCheers();
   }
 
@@ -715,6 +716,206 @@
       }
     });
 
+    load();
+  }
+
+
+  // ───────── 채용정보 (카톡 문구 붙여넣기 → 확인·수정 → 저장) ─────────
+  const JOB_CATS = ["대기업", "중견기업", "강소·중소", "외국계", "공공기관", "스타트업"];
+  const JOB_EMPS = ["정규직", "계약직", "인턴", "아르바이트", "기타"];
+
+  function initJobs() {
+    const panel = $('[data-panel="jobs"]');
+    panel.innerHTML = `
+      <h1 class="admin-title">채용정보</h1>
+      <p class="admin-desc">카톡으로 보내던 문구를 그대로 붙여넣으면 칸이 채워져요. 확인하고 고친 뒤 저장하세요. 마감일이 지난 공고는 사이트에서 저절로 내려가요.</p>
+      <div class="panel">
+        <div class="panel-head"><h2>카톡 문구로 추가</h2><p>여러 공고를 한꺼번에 붙여도 돼요. 링크 줄 다음 줄에 '기업명/직무/경력/학력/지역/기타/마감' 순서로 적어 주세요 (순서가 조금 달라도 괜찮아요).</p></div>
+        <div class="panel-body">
+          <textarea class="job-paste" data-paste rows="5" placeholder="https://...&#10;삼성전자/인사노무/신입/서울/대졸/1210"></textarea>
+          <div class="row" style="margin-top:12px">
+            <button class="btn btn-dark" type="button" data-read>${ico("clipboard-list")}읽기</button>
+            <button class="btn btn-secondary" type="button" data-blank>${ico("plus")}직접 입력</button>
+          </div>
+        </div>
+      </div>
+      <div data-drafts></div>
+      <div class="seg-tabs" role="group" aria-label="보기" style="margin-top:12px">
+        <button type="button" data-view="live" aria-pressed="true">진행 중 <b data-n-live></b></button>
+        <button type="button" data-view="done" aria-pressed="false">마감·숨김 <b data-n-done></b></button>
+      </div>
+      <div data-items><div class="list"><div class="skeleton"></div><div class="skeleton"></div></div></div>`;
+
+    const drafts = $("[data-drafts]", panel);
+    const list = $("[data-items]", panel);
+    let rows = [], view = "live", editingId = null;
+    const today = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+    const expired = (j) => !j.rolling && j.deadline && new Date(j.deadline + "T00:00:00") < today();
+    const opt = (list, v, blank) => (blank ? `<option value="">${blank}</option>` : "") + list.map((x) => `<option${x === v ? " selected" : ""}>${esc(x)}</option>`).join("");
+
+    function card(j) {
+      return `<div class="job-edit panel">
+        <div class="panel-body">
+          <div class="job-grid">
+            <label class="field span2"><span>링크</span><input type="url" data-k="link" value="${esc(j.link || "")}" placeholder="https://"></label>
+            <label class="field"><span>기업명</span><input type="text" data-k="company" value="${esc(j.company || "")}" required></label>
+            <label class="field"><span>기업 범주 <span class="hint">모르면 비워 두세요</span></span><select data-k="category">${opt(JOB_CATS, j.category || "", "선택 안 함")}</select></label>
+            <label class="field span2"><span>직무</span><input type="text" data-k="role" value="${esc(j.role || "")}" required></label>
+            <label class="field"><span>고용형태</span><select data-k="employment">${opt(JOB_EMPS, j.employment || "정규직")}</select></label>
+            <label class="field"><span>기간 <span class="hint">개월, 계약직·인턴만</span></span><input type="number" min="1" data-k="months" value="${j.months || ""}"></label>
+            <label class="field"><span>경력</span><input type="text" data-k="career" list="job-career" value="${esc(j.career || "")}"></label>
+            <label class="field"><span>학력</span><input type="text" data-k="education" list="job-edu" value="${esc(j.education || "")}"></label>
+            <label class="field"><span>지역 <span class="hint">예: 서울, 경기 평택</span></span><input type="text" data-k="region" value="${esc(j.region || "")}"></label>
+            <label class="field"><span>마감일</span><input type="date" data-k="deadline" value="${esc(j.deadline || "")}"${j.rolling ? " disabled" : ""}></label>
+            <label class="field span2"><span>기타 자격요건</span><input type="text" data-k="etc" value="${esc(j.etc || "")}"></label>
+            <label class="field"><span>급여 <span class="hint">선택</span></span><input type="text" data-k="salary" value="${esc(j.salary || "")}"></label>
+            <div class="field job-switches">
+              <label class="switch"><input type="checkbox" data-k="rolling"${j.rolling ? " checked" : ""}> 상시·채용 시 마감</label>
+              <label class="switch"><input type="checkbox" data-k="recommend"${j.recommend !== false ? " checked" : ""}> 인재추천 가능</label>
+            </div>
+          </div>
+          <div class="row job-edit-foot">
+            <span class="hint" data-src>${esc(j._src || "")}</span>
+            <button class="btn btn-ghost btn-sm" type="button" data-drop>${ico("x")}빼기</button>
+          </div>
+        </div>
+      </div>`;
+    }
+    function readCard(el) {
+      const j = {};
+      el.querySelectorAll("[data-k]").forEach((f) => {
+        const k = f.dataset.k;
+        j[k] = f.type === "checkbox" ? f.checked : f.value.trim();
+      });
+      j.months = j.months ? parseInt(j.months, 10) : null;
+      j.category = j.category || null;
+      j.deadline = j.rolling ? null : j.deadline || null;
+      j.area = regionArea(j.region || "");
+      ["link", "career", "education", "region", "etc", "salary"].forEach((k) => (j[k] = j[k] || null));
+      return j;
+    }
+    function showDrafts(jobs, editing) {
+      editingId = editing || null;
+      drafts.innerHTML = jobs.length ? `
+        <div class="drafts-head"><h2>${editing ? "공고 수정" : `확인하고 저장하기 <span class="count">${jobs.length}개</span>`}</h2></div>
+        ${jobs.map(card).join("")}
+        <div class="row drafts-foot">
+          <button class="btn btn-dark" type="button" data-save>${editing ? "수정 저장" : `${jobs.length}개 모두 저장`}</button>
+          <button class="btn btn-secondary" type="button" data-cancel-drafts>취소</button>
+        </div>` : "";
+      if (jobs.length) drafts.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    // 고용형태를 바꾸면 인재추천도 따라 바뀜 (정규직이면 가능). 직접 다시 바꿀 수 있음
+    drafts.addEventListener("change", (e) => {
+      if (e.target.dataset.k === "employment") {
+        const c = e.target.closest(".job-edit");
+        c.querySelector('[data-k="recommend"]').checked = e.target.value === "정규직";
+      }
+      if (e.target.dataset.k === "rolling") {
+        e.target.closest(".job-edit").querySelector('[data-k="deadline"]').disabled = e.target.checked;
+      }
+    });
+    drafts.addEventListener("click", async (e) => {
+      if (e.target.closest("[data-drop]")) {
+        e.target.closest(".job-edit").remove();
+        const left = drafts.querySelectorAll(".job-edit").length;
+        if (!left) drafts.innerHTML = "";
+        else { const b = $("[data-save]", drafts); if (!editingId) b.textContent = `${left}개 모두 저장`; }
+      }
+      if (e.target.closest("[data-cancel-drafts]")) { drafts.innerHTML = ""; editingId = null; }
+      const sv = e.target.closest("[data-save]");
+      if (sv) {
+        const cards = [...drafts.querySelectorAll(".job-edit")];
+        const recs = cards.map(readCard);
+        const bad = recs.findIndex((r) => !r.company || !r.role);
+        if (bad >= 0) return toast(`${bad + 1}번째 공고의 기업명·직무를 적어 주세요.`, true);
+        sv.disabled = true;
+        try {
+          const res = editingId
+            ? await db.from("jobs").update(recs[0]).eq("id", editingId)
+            : await db.from("jobs").insert(recs);
+          if (res.error) throw res.error;
+          toast(editingId ? "수정했어요." : `${recs.length}개를 저장했어요.`);
+          drafts.innerHTML = ""; editingId = null;
+          $("[data-paste]", panel).value = "";
+          load();
+        } catch (err) {
+          if (/jobs/.test(String(err && err.message)) && /relation|schema|find|exist/i.test(String(err.message))) toast("DB 준비가 필요해요: supabase/migrations/005_jobs.sql 을 실행해 주세요.", true);
+          else fail(err);
+        } finally { sv.disabled = false; }
+      }
+    });
+
+    $("[data-read]", panel).addEventListener("click", () => {
+      const text = $("[data-paste]", panel).value;
+      const got = parseJobText(text).map((j) => Object.assign(j, { _src: `${j.company}/${j.role}…` }));
+      if (!got.length) return toast("읽을 수 있는 공고가 없어요. '기업명/직무/...'처럼 / 로 나눠 주세요.", true);
+      showDrafts(got);
+    });
+    $("[data-blank]", panel).addEventListener("click", () => showDrafts([{ employment: "정규직", recommend: true }]));
+
+    const dl = document.createElement("div");
+    dl.innerHTML = `<datalist id="job-career"><option value="신입"><option value="경력무관"><option value="신입·경력"><option value="경력 1년↑"><option value="경력 3년↑"><option value="경력 5년↑"></datalist>
+      <datalist id="job-edu"><option value="학력무관"><option value="고졸"><option value="초대졸"><option value="대졸"><option value="석사"><option value="박사"></datalist>`;
+    panel.append(dl);
+
+    const dtext = (j) => {
+      if (j.rolling || !j.deadline) return "상시";
+      const n = Math.round((new Date(j.deadline + "T00:00:00") - today()) / 864e5);
+      return n < 0 ? "마감" : n === 0 ? "오늘" : `D-${n}`;
+    };
+    function render() {
+      const live = rows.filter((j) => j.visible && !expired(j));
+      const done = rows.filter((j) => !j.visible || expired(j));
+      $("[data-n-live]", panel).textContent = live.length || "";
+      $("[data-n-done]", panel).textContent = done.length || "";
+      const show = view === "live" ? live : done;
+      list.innerHTML = show.length
+        ? `<div class="list admin-list">${show.map((j) => `<div class="list-row${!j.visible ? " is-hidden" : ""}">
+            <span class="job-d">${dtext(j)}</span>
+            <span class="body"><span class="title">${!j.visible ? '<span class="badge badge-neutral">숨김</span>' : ""}${esc(j.role)} · ${esc(j.company)}${j.category ? ` <span class="badge badge-neutral">${esc(j.category)}</span>` : ""}</span>
+              <span class="sub">${esc([j.employment + (j.months ? ` ${j.months}개월` : ""), j.career, j.education, j.region].filter(Boolean).join(" · "))}${j.recommend ? " · 인재추천 가능" : ""}</span></span>
+            <span class="actions">
+              <button class="btn btn-secondary btn-sm" data-edit="${esc(j.id)}">수정</button>
+              <button class="btn btn-secondary btn-sm" data-hide="${esc(j.id)}">${j.visible ? "숨기기" : "보이기"}</button>
+              <button class="btn btn-danger btn-sm" data-del="${esc(j.id)}">삭제</button>
+            </span></div>`).join("")}</div>`
+        : `<div class="list"><div class="empty">${ico("briefcase")}<strong>${view === "live" ? "진행 중인 공고가 없어요" : "마감되거나 숨긴 공고가 없어요"}</strong>${view === "live" ? "<p>위 칸에 카톡 문구를 붙여넣어 추가하세요.</p>" : ""}</div></div>`;
+    }
+    async function load() {
+      const { data, error } = await db.from("jobs").select("*").order("deadline", { ascending: true, nullsFirst: false }).order("created_at", { ascending: false });
+      if (error) {
+        console.error(error);
+        list.innerHTML = `<div class="list"><div class="empty">${ico("briefcase")}<strong>DB 준비가 필요해요</strong><p>Supabase SQL Editor에서 supabase/migrations/005_jobs.sql 을 실행해 주세요.</p></div></div>`;
+        return;
+      }
+      rows = data;
+      render();
+    }
+    $$("[data-view]", panel).forEach((b) => b.addEventListener("click", () => {
+      view = b.dataset.view;
+      $$("[data-view]", panel).forEach((x) => x.setAttribute("aria-pressed", x === b));
+      render();
+    }));
+    list.addEventListener("click", async (e) => {
+      const ed = e.target.closest("[data-edit]"), hd = e.target.closest("[data-hide]"), del = e.target.closest("[data-del]");
+      const id = (ed || hd || del || {}).dataset;
+      if (!id) return;
+      const j = rows.find((x) => x.id === (id.edit || id.hide || id.del));
+      if (ed) showDrafts([j], j.id);
+      if (hd) {
+        const { error } = await db.from("jobs").update({ visible: !j.visible }).eq("id", j.id);
+        if (error) return fail(error);
+        j.visible = !j.visible; toast(j.visible ? "다시 보이게 했어요." : "숨겼어요."); render();
+      }
+      if (del) {
+        if (!confirm(`'${j.company} ${j.role}' 공고를 삭제할까요? 되돌릴 수 없어요.`)) return;
+        const { error } = await db.from("jobs").delete().eq("id", j.id);
+        if (error) return fail(error);
+        rows = rows.filter((x) => x !== j); toast("삭제했어요."); render();
+      }
+    });
     load();
   }
 

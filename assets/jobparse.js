@@ -2,13 +2,13 @@
 // 예)  https://...
 //      삼성전자/인사노무/신입/서울/대졸/1210
 // 칸의 순서가 아니라 "생김새"로 알아봅니다. 맨 앞 두 칸만 기업명·직무로 봅니다.
+// 기업 범주는 이름에 대기업 그룹명이나 '공사·공단' 등이 확실히 있을 때만 채우고, 나머지는 비워 둡니다.
 (function () {
   const SEOUL = "종로 중구 용산 성동 광진 동대문 중랑 성북 강북 도봉 노원 은평 서대문 마포 양천 강서 구로 금천 영등포 동작 관악 서초 강남 송파 강동".split(" ");
   const GYEONGGI = "수원 성남 분당 판교 의정부 안양 부천 광명 평택 동두천 안산 고양 일산 과천 구리 남양주 오산 시흥 군포 의왕 하남 용인 기흥 수지 파주 이천 안성 김포 화성 동탄 광주 양주 포천 여주 연천 가평 양평".split(" ");
   const PROVINCES = "인천 부산 대구 대전 울산 세종 강원 충북 충남 전북 전남 경북 경남 제주 충청 전라 경상 창원 청주 천안 아산 구미 포항 거제 전국 재택".split(" ");
   const BIG = "삼성 현대 기아 SK 에스케이 LG 엘지 씨제이 지에스 에이치디 롯데 한화 CJ GS 포스코 POSCO 신세계 이마트 두산 HD 한진 대한항공 KT 카카오 네이버 NAVER 쿠팡 효성 LS 코오롱 아모레 농심 대상 하이닉스".split(" ");
   const PUBLIC = /(공사|공단|진흥원|재단|연구원|공기업|기관|청$|시청|구청|도청|센터$|협회|공제회|은행$)/;
-  const FOREIGN = /(코리아|Korea|인터내셔널|글로벌|외국계)/i;
 
   const has = (list, t) => list.some((w) => t.includes(w));
 
@@ -20,7 +20,6 @@
   function guessCategory(company) {
     if (PUBLIC.test(company)) return "공공기관";
     if (has(BIG, company)) return "대기업";
-    if (FOREIGN.test(company)) return "외국계";
     return "";
   }
   function toDeadline(tok, today) {

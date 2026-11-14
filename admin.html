@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex">
   <title>관리자</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-  <link rel="stylesheet" href="assets/style.css?v=20261114i">
+  <link rel="stylesheet" href="assets/style.css?v=20261114k">
   <script>document.documentElement.classList.add("js")</script>
 </head>
 <body class="admin-body">
@@ -58,6 +58,7 @@
         <button role="tab" data-tab="settings" aria-selected="true"><span data-ico="house"></span>사이트 꾸미기</button>
         <button role="tab" data-tab="notices"><span data-ico="megaphone"></span>공지</button>
         <button role="tab" data-tab="faqs"><span data-ico="circle-help"></span>자주 묻는 질문</button>
+        <button role="tab" data-tab="jobs"><span data-ico="briefcase"></span>채용정보</button>
         <button role="tab" data-tab="resources"><span data-ico="folder-open"></span>자료실</button>
         <button role="tab" data-tab="cheers"><span data-ico="sticky-note"></span>응원 보드</button>
       </nav>
@@ -138,6 +139,7 @@
 
         <div data-panel="notices" hidden></div>
         <div data-panel="faqs" hidden></div>
+        <div data-panel="jobs" hidden></div>
         <div data-panel="resources" hidden></div>
         <div data-panel="cheers" hidden></div>
       </div>
@@ -166,8 +168,9 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-  <script src="assets/config.js?v=20261114i"></script>
-  <script src="assets/defaults.js?v=20261114i"></script>
-  <script src="assets/admin.js?v=20261114i"></script>
+  <script src="assets/config.js?v=20261114k"></script>
+  <script src="assets/defaults.js?v=20261114k"></script>
+  <script src="assets/jobparse.js?v=20261114k"></script>
+  <script src="assets/admin.js?v=20261114k"></script>
 </body>
 </html>

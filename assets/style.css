@@ -617,6 +617,22 @@ a.list-row:hover .chev { color: var(--text); transform: translateX(3px); }
 .seg-tabs b { color: var(--danger); }
 .form-panel { box-shadow: 0 0 0 2px var(--ink), var(--shadow-md); }
 
+/* 채용정보 편집 */
+.job-paste { width: 100%; min-height: 120px; padding: 12px 14px; border: 0; border-radius: 12px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--border); font: 15px/1.6 ui-monospace, Menlo, Consolas, monospace; resize: vertical; }
+.job-paste:focus { outline: none; box-shadow: inset 0 0 0 1.5px var(--ink); }
+.drafts-head h2 { margin: 28px 0 12px; font-size: 18px; }
+.drafts-head .count { font-size: 14px; color: var(--muted); font-weight: 600; }
+.job-edit { box-shadow: 0 0 0 1.5px var(--ink), var(--shadow-sm); }
+.job-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px; }
+.job-grid .span2 { grid-column: 1 / -1; }
+@media (min-width: 900px) { .job-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } .job-grid .span2 { grid-column: span 2; } }
+.job-grid .field { margin-bottom: 14px; }
+.job-grid .field input:not([type="checkbox"]), .job-grid .field select { min-height: 42px; padding: 8px 12px; font-size: 15px; }
+.job-switches { justify-content: flex-end; gap: 10px; }
+.job-edit-foot { justify-content: space-between; margin-top: 2px; }
+.drafts-foot { margin: 4px 0 28px; }
+.job-d { flex: none; width: 52px; font-family: var(--font-serif-en); font-style: italic; font-size: 18px; color: var(--text); }
+
 /* 아이콘 고르기 창 */
 dialog.picker { width: min(540px, calc(100vw - 24px)); max-height: calc(100vh - 48px); padding: 0; border: 0; border-radius: 24px; box-shadow: var(--shadow-lg); color: var(--text); }
 dialog.picker::backdrop { background: rgba(28, 26, 23, .38); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
