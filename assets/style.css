@@ -530,6 +530,19 @@ a.list-row:hover .chev { color: var(--text); transform: translateX(3px); }
 .rec-note .ico { font-size: 20px; color: var(--primary-ink); margin-top: 1px; }
 .rec-note b { color: var(--text); }
 .job-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.closed-wrap { margin-top: 28px; }
+.closed-wrap > summary { display: flex; align-items: center; gap: 10px; padding: 12px 6px; cursor: pointer; list-style: none; font-size: 15px; font-weight: 600; color: var(--text-2); }
+.closed-wrap > summary::-webkit-details-marker { display: none; }
+.closed-wrap > summary b { color: var(--text); font-variant-numeric: tabular-nums; }
+.closed-wrap > summary .hint { font-size: 13px; font-weight: 500; color: var(--muted); }
+.closed-wrap > summary .ico { margin-left: auto; color: var(--muted); transition: transform .3s var(--ease); }
+.closed-wrap[open] > summary .ico { transform: rotate(180deg); }
+.closed-wrap > .list { margin-top: 6px; }
+.fold.job.is-closed > summary { opacity: .62; }
+.fold.job.is-closed[open] > summary { opacity: .85; }
+.dday.is-closed { font-family: var(--font); font-style: normal; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.closed-note { display: flex; gap: 10px; margin: 0; padding: 12px 16px; border-radius: 14px; background: var(--surface-2); color: var(--text-2); font-size: 14.5px; }
+.closed-note .ico { font-size: 18px; color: var(--muted); margin-top: 2px; }
 dialog.rec-dialog { width: min(420px, calc(100vw - 24px)); }
 .rec-dialog .picker-body p { margin: 0 0 10px; color: var(--text-2); font-size: 15.5px; line-height: 1.65; }
 .rec-dialog .rec-job { padding: 12px 14px; border-radius: 12px; background: var(--bg); color: var(--text) !important; }

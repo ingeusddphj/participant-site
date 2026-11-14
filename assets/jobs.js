@@ -2,6 +2,7 @@
 // window.renderJobs(상자, 공고배열) 로 그립니다. 공고 칸 이름은 jobparse.js 와 같습니다.
 (function () {
   const DAY = 864e5;
+  const CLOSED_DAYS = 30; // 마감 후 이 기간 동안은 '최근 마감된 공고'로 흐리게 보여 줌
   const startOfToday = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
   const dleft = (j) => (j.rolling || !j.deadline ? null : Math.round((new Date(j.deadline + "T00:00:00") - startOfToday()) / DAY));
   const isNew = (j) => j.created_at && Date.now() - new Date(j.created_at).getTime() < 3 * DAY;
@@ -9,7 +10,8 @@
   const empKind = (j) => ({ 정규직: "full", 계약직: "contract", 인턴: "intern" }[j.employment] || "etc");
   const fmt = (iso) => { const d = new Date(iso + "T00:00:00"); return `${d.getMonth() + 1}월 ${d.getDate()}일 (${"일월화수목금토"[d.getDay()]})`; };
 
-  function dBadge(j) {
+  function dBadge(j, closed) {
+    if (closed) return `<span class="dday is-closed">마감</span>`;
     const n = dleft(j);
     if (n === null) return `<span class="dday is-rolling">상시</span>`;
     if (n === 0) return `<span class="dday is-urgent is-today">오늘<br>마감</span>`;
@@ -53,6 +55,7 @@
   window.renderJobs = function (box, all, opts = {}) {
     const state = { emp: new Set(), career: new Set(), area: new Set(), cat: "", q: "", rec: false, soon: false, fresh: false };
     const live = () => all.filter((j) => { const n = dleft(j); return n === null || n >= 0; });
+    const recentlyClosed = () => all.filter((j) => { const n = dleft(j); return n !== null && n < 0 && n >= -CLOSED_DAYS; });
 
     function match(j) {
       if (state.emp.size && !state.emp.has(j.employment || "정규직")) return false;
@@ -64,7 +67,7 @@
       if (state.area.size && !state.area.has(j.area || regionArea(j.region || ""))) return false;
       if (state.cat && j.category !== state.cat) return false;
       if (state.rec && !j.recommend) return false;
-      if (state.soon) { const n = dleft(j); if (n === null || n > 7) return false; }
+      if (state.soon) { const n = dleft(j); if (n === null || n < 0 || n > 7) return false; }
       if (state.fresh && !isNew(j)) return false;
       if (state.q) {
         const hay = [j.company, j.role, j.region, j.etc, j.education, j.career].join(" ").toLowerCase();
@@ -80,15 +83,15 @@
       return x - y;
     };
 
-    const row = (j, i) => `<details class="fold job" data-i="${i}">
+    const row = (j, i, closed) => `<details class="fold job${closed ? " is-closed" : ""}" data-i="${i}">
       <summary>
-        ${dBadge(j)}
+        ${dBadge(j, closed)}
         <span class="body">
-          <span class="title"><span class="role">${esc(j.role)}</span><span class="co">${esc(j.company)}</span>${j.category ? `<span class="cat">${esc(j.category)}</span>` : ""}${j.recommend ? '<span class="rec-inline">인재추천 가능</span>' : ""}${isNew(j) ? '<span class="badge badge-primary">NEW</span>' : ""}</span>
+          <span class="title"><span class="role">${esc(j.role)}</span><span class="co">${esc(j.company)}</span>${j.category ? `<span class="cat">${esc(j.category)}</span>` : ""}${!closed && j.recommend ? '<span class="rec-inline">인재추천 가능</span>' : ""}${!closed && isNew(j) ? '<span class="badge badge-primary">NEW</span>' : ""}</span>
           <span class="meta"><span class="emp" data-k="${empKind(j)}">${esc(empText(j))}</span>${[j.career, j.education, j.region].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join("")}</span>
           ${j.note ? `<span class="job-note">${ico("messages-square")}<span>${esc(j.note)}</span></span>` : ""}
         </span>
-        ${j.recommend ? `<span class="rec" title="상담사를 통해 추천 지원할 수 있어요">인재추천<b>가능</b></span>` : ""}
+        ${!closed && j.recommend ? `<span class="rec" title="상담사를 통해 추천 지원할 수 있어요">인재추천<b>가능</b></span>` : ""}
         ${ico("chevron-right", "toggle")}
       </summary>
       <div class="fold-body job-body">
@@ -102,11 +105,12 @@
           ${j.salary ? `<div><dt>급여</dt><dd>${esc(j.salary)}</dd></div>` : ""}
           <div><dt>마감</dt><dd>${j.rolling || !j.deadline ? "채용 시 마감" : esc(fmt(j.deadline))}</dd></div>
         </dl>
-        ${j.recommend ? `<p class="rec-note">${ico("heart-handshake")}<span><b>인재추천 가능 공고예요.</b> 지원하고 싶으시면 상담사에게 말씀해주세요. 추천서를 준비해 드려요.</span></p>` : ""}
-        <div class="job-actions">
+        ${closed ? `<p class="closed-note">${ico("calendar-days")}<span>마감된 공고예요. 비슷한 공고가 궁금하면 상담사에게 물어봐 주세요.</span></p>` : ""}
+        ${!closed && j.recommend ? `<p class="rec-note">${ico("heart-handshake")}<span><b>인재추천 가능 공고예요.</b> 지원하고 싶으시면 상담사에게 말씀해주세요. 추천서를 준비해 드려요.</span></p>` : ""}
+        ${closed ? "" : `<div class="job-actions">
           ${j.link ? `<a class="btn btn-dark" href="${esc(j.link)}" target="_blank" rel="noopener">원문 공고 보기${ico("arrow-up-right")}</a>` : ""}
           ${j.recommend ? `<button class="btn" type="button" data-rec-ask="${i}">${ico("heart-handshake")}인재추천 희망</button>` : ""}
-        </div>
+        </div>`}
       </div>
     </details>`;
 
@@ -119,6 +123,9 @@
     function draw() {
       const base = live();
       shown = base.filter(match).sort(sort);
+      const closedShown = state.soon || state.fresh || state.rec ? [] : recentlyClosed().filter(match).sort((a, b) => dleft(b) - dleft(a));
+      const prev = box.querySelector(".closed-wrap");
+      const closedOpen = prev ? prev.open : false;
       const cats = [...new Set(base.map((j) => j.category).filter(Boolean))];
       const nFresh = base.filter(isNew).length;
       const nSoon = base.filter((j) => { const n = dleft(j); return n !== null && n <= 7; }).length;
@@ -138,8 +145,12 @@
           ${cats.length > 1 ? `<div class="fgroup"><span class="flabel">기업</span>${cats.map((c) => chip("cat", c)).join("")}</div>` : ""}
         </div>
         <p class="job-count"><b>${shown.length}</b>개 공고 · 마감 임박순${shown.length !== base.length ? ` <button type="button" class="linkish" data-reset>조건 지우기</button>` : ""}</p>
-        ${shown.length ? `<div class="list">${shown.map(row).join("")}</div>`
-          : `<div class="list"><div class="empty">${ico("briefcase")}<strong>조건에 맞는 공고가 없어요</strong><p>조건을 줄여 보거나 상담사에게 물어봐 주세요.</p></div></div>`}`;
+        ${shown.length ? `<div class="list">${shown.map((j, i) => row(j, i)).join("")}</div>`
+          : `<div class="list"><div class="empty">${ico("briefcase")}<strong>조건에 맞는 공고가 없어요</strong><p>조건을 줄여 보거나 상담사에게 물어봐 주세요.</p></div></div>`}
+        ${closedShown.length ? `<details class="closed-wrap"${closedOpen ? " open" : ""}>
+          <summary><span>최근 마감된 공고 <b>${closedShown.length}</b></span><span class="hint">마감 후 ${CLOSED_DAYS}일 동안 보여요</span>${ico("chevron-down")}</summary>
+          <div class="list">${closedShown.map((j, i) => row(j, i, true)).join("")}</div>
+        </details>` : ""}`;
       if (focus) { const q = box.querySelector('[name="q"]'); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
     }
 
