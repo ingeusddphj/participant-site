@@ -56,7 +56,7 @@
         <h2 class="group-title">${esc(cat)} <span class="count">${items.length}</span></h2>
         <div class="list">${items.map((f) => `<details class="fold">
           <summary><span class="q-mark">Q</span><span class="body"><span class="title">${esc(f.question)}</span></span>${ico("chevron-right", "toggle")}</summary>
-          <div class="fold-body with-q">${esc(f.answer)}</div></details>`).join("")}</div>`).join("");
+          <div class="fold-body with-q"><span class="a-mark" aria-hidden="true">A</span>${esc(f.answer)}</div></details>`).join("")}</div>`).join("");
     }
 
     if (page === "resources") {

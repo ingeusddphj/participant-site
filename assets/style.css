@@ -322,7 +322,8 @@ a.list-row:hover .chev { color: var(--text); transform: translateX(3px); }
 .fold > summary:hover .toggle { color: var(--text); }
 .fold[open] > summary .toggle { transform: rotate(-90deg); color: var(--text); }
 .fold-body { padding: 0 22px 24px; color: var(--text-2); white-space: pre-wrap; font-size: 16px; line-height: 1.75; animation: rise .5s var(--ease) both; }
-.fold-body.with-q { padding-left: 58px; }
+.fold-body.with-q { position: relative; padding-left: 58px; }
+.a-mark { position: absolute; left: 22px; top: 0; width: 22px; font-size: 17px; font-weight: 800; line-height: 1.6; color: #bdb6ac; }
 .q-mark { flex: none; width: 22px; margin-top: 1px; font-size: 17px; font-weight: 800; line-height: 1.4; color: var(--primary-ink); }
 [data-theme="a"] .q-mark { color: #c58f00; }
 
