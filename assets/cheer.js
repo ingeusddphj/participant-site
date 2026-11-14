@@ -6,7 +6,7 @@
   const PREVIEW = document.body.hasAttribute("data-cheer-preview");
   const MAX = 60;
   const COLORS = [["yellow", "#fff1a8"], ["pink", "#ffd8df"], ["mint", "#cff1df"], ["sky", "#d3e6ff"], ["lilac", "#e5dcff"]];
-  const PINS = ["#d9483b", "#2d3a4b", "#e0a100", "#2f7d5b", "#3a6fd8"];
+  const PINS = ["#b8322a", "#24303f", "#c8961e", "#2c6e50", "#2f5fb3", "#e8e4dc"];
   // 별명 = 재밌는 꾸밈말 + 꽃·식물 이름 (숫자 없음)
   const ADJ = [
     "꽃길만 걷는", "물 잘 마시는", "햇살 샤워 중인", "뿌리 깊은", "새싹 돋는", "콧노래 부르는",
@@ -39,11 +39,11 @@
   function noteHtml(n, isNew) {
     const h = hash(n.id);
     const r = ((h % 9) - 4) * 0.6; // -2.4° ~ 2.4°
-    return `<li class="note${isNew ? " is-new" : ""}" data-c="${esc(n.color)}" data-id="${esc(n.id)}" style="--r:${r}deg;--pin:${PINS[h % PINS.length]}">
+    return `<li class="note${isNew ? " is-new" : ""}" data-c="${esc(n.color)}" data-id="${esc(n.id)}" style="--r:${r}deg;--pin:${PINS[h % PINS.length]}"><div class="paper">
       <p class="msg">${esc(n.body)}</p>
       <div class="foot"><span class="by">${esc(n.nickname)}</span><time datetime="${esc(n.created_at)}">${ago(n.created_at)}</time></div>
       <button class="report" type="button" aria-label="이 메모 신고하기" title="신고하기">${ico("flag")}</button>
-    </li>`;
+    </div></li>`;
   }
 
   let notes = [];
